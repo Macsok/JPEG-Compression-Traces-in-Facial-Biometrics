@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated research results (created only when a workflow is run)
+results/
+
+# Optional licensed image collections placed below data/ stay local
+data/*/
+
+# Common model and temporary outputs
+*.pkl
+*.joblib
+*.tmp
+*.log

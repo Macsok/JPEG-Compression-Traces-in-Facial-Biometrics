@@ -1,0 +1,8 @@
+name: jpeg-compression-research
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.11
+  - pip=25.2
+  - pip:
+      - -e .[research,test]

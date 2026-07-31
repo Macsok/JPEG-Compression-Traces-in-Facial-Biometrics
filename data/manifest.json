@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "hash_algorithm": "sha256",
+  "files": [
+    {
+      "path": "data/results_240k_one_compression_filtered.csv",
+      "bytes": 70469600,
+      "data_rows": 238098,
+      "sha256": "bd2c2e6b85746094866278410a247ccdea9831b392783d3074063ac6ecc659fc",
+      "role": "JPEG quality-regression feature table; quality is encoded in filename"
+    },
+    {
+      "path": "data/results_humanFacesDatasetAI.csv",
+      "bytes": 1289888,
+      "data_rows": 4630,
+      "sha256": "71f73be554d43d1bd8bc3043cda82413e8d2363c9b1eb85987b38c449cc71207",
+      "role": "External AI-face evaluation features"
+    },
+    {
+      "path": "data/results_humanFacesDatasetReal.csv",
+      "bytes": 1391940,
+      "data_rows": 5000,
+      "sha256": "5cfbf2482687e72aa9a414f9b3ee409e4fa8d7293b6a627030afc9cf42126c56",
+      "role": "External real-face evaluation features"
+    },
+    {
+      "path": "data/results_jfif.csv",
+      "bytes": 3145435,
+      "data_rows": 11000,
+      "sha256": "939949fe7f707b1c202764874085cf41f5849c1c56db1f29cd5270b4ae6cc8de",
+      "role": "JFIF-class feature table used by the format classifier"
+    },
+    {
+      "path": "data/results_ppm.csv",
+      "bytes": 3273388,
+      "data_rows": 11338,
+      "sha256": "f9ec2a2c4d870552b7f0b5e458841bc691c842ec4df7394b458cb0617d5fa0cb",
+      "role": "PPM-class feature table used by the format classifier"
+    }
+  ]
+}
