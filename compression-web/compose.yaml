@@ -1,0 +1,17 @@
+services:
+  compression:
+    image: compression-inspector:1.0.0
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MAX_UPLOAD_MB: "64"
+      MAX_IMAGE_PIXELS: "24000000"

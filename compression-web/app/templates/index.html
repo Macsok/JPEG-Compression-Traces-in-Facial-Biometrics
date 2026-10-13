@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compression Inspector — image analysis</title>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script defer src="{{ url_for('static', filename='i18n.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='histogram.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">▦ <span>Compression Inspector</span></a>
+    <div class="header-controls">
+      <span class="status" id="server-status">Connecting to the models…</span>
+      <div class="icon-switch" role="group" data-i18n-aria="language" aria-label="Language">
+        <button type="button" id="language-en" class="icon-button" data-language="en" data-i18n-aria="languageEnglish" data-i18n-title="languageEnglish" aria-label="English" title="English" aria-pressed="true">
+          <svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><path fill="#21468b" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="10" d="m0 0 60 40M60 0 0 40"/><path stroke="#c8102e" stroke-width="4" d="m0 0 60 40M60 0 0 40"/><path stroke="#fff" stroke-width="14" d="M30 0v40M0 20h60"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/></svg>
+        </button>
+        <button type="button" id="language-pl" class="icon-button" data-language="pl" data-i18n-aria="languagePolish" data-i18n-title="languagePolish" aria-label="Polish" title="Polish" aria-pressed="false">
+          <svg class="flag-icon" viewBox="0 0 60 40" aria-hidden="true" focusable="false"><path fill="#fff" d="M0 0h60v20H0z"/><path fill="#dc143c" d="M0 20h60v20H0z"/></svg>
+        </button>
+      </div>
+      <div class="icon-switch" role="group" data-i18n-aria="theme" aria-label="Theme">
+        <button type="button" id="theme-light" class="icon-button" data-theme-choice="light" data-i18n-aria="themeLight" data-i18n-title="themeLight" aria-label="Light" title="Light" aria-pressed="true">
+          <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42m0-14.14-1.42 1.42m-11.3 11.3-1.42 1.42"/></svg>
+        </button>
+        <button type="button" id="theme-dark" class="icon-button" data-theme-choice="dark" data-i18n-aria="themeDark" data-i18n-title="themeDark" aria-label="Dark" title="Dark" aria-pressed="false">
+          <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 12.8A9 9 0 0 1 11.2 3 9 9 0 1 0 21 12.8Z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <p class="eyebrow" data-i18n="eyebrow">IMAGE COMPRESSION ANALYSIS</p>
+    <h1 data-i18n="headline">What lies within the pixels?</h1>
+    <p class="intro" data-i18n="intro">Look for traces of JPEG compression. Select images or a whole folder to predict PPM / JFIF and JPEG quality.</p>
+    <section class="upload-panel" aria-labelledby="upload-title">
+      <div id="upload-symbol" class="upload-symbol" aria-hidden="true">↥</div>
+      <h2 id="upload-title">Add images to analyse</h2>
+      <p id="upload-description">Drag files here or choose them from your device.</p>
+      <p id="upload-confirmation" class="upload-confirmation" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="actions">
+        <label class="button primary file-label"><span data-i18n="chooseImages">Choose images</span><input id="files" type="file" multiple accept=".jpg,.jpeg,.jfif,.png,.ppm,.bmp,.tif,.tiff,.webp"></label>
+        <label class="button secondary file-label"><span data-i18n="chooseFolder">Choose folder</span><input id="folder" type="file" multiple webkitdirectory></label>
+      </div>
+      <p class="hint" id="limits">JPG · JFIF · PPM · PNG · BMP · TIFF · WebP</p>
+      <p class="hint" data-i18n="folderHint">Folders include subfolders. Images are analysed at their original resolution.</p>
+    </section>
+    <div class="toolbar">
+      <p id="selection" role="status" aria-live="polite">No images selected yet.</p>
+      <div class="actions"><button id="start" class="primary" disabled data-i18n="start">Start analysis</button><button id="stop" class="secondary" hidden data-i18n="stop">Stop after the current image</button></div>
+    </div>
+    <progress id="progress" value="0" max="1" aria-label="Analysis progress" data-i18n-aria="progress" hidden></progress>
+    <section id="results-section" hidden aria-labelledby="results-title">
+      <div class="toolbar"><div><p class="eyebrow" data-i18n="report">REPORT</p><h2 id="results-title" data-i18n="results">Analysis results</h2></div><div class="actions"><button id="csv" class="secondary" data-i18n="csv">Download CSV</button><button id="json" class="secondary" data-i18n="json">Download JSON</button></div></div>
+      <p id="summary" aria-live="polite"></p>
+      <section class="histogram-panel" aria-labelledby="histogram-heading">
+        <h2 id="histogram-heading" data-i18n="histogramHeading">Distribution of predicted quality</h2>
+        <div class="histogram-legend"><span><i class="jfif-swatch"></i>JFIF</span><span><i class="ppm-swatch"></i>PPM</span></div>
+        <div id="histogram"></div>
+        <p id="histogram-note" class="hint"></p>
+      </section>
+      <div class="table-wrap"><table><thead><tr><th data-i18n="image">Image</th><th data-i18n="prediction">Prediction</th><th data-i18n="confidence">Model confidence</th><th data-i18n="quality">JPEG quality</th><th data-i18n="details">Details</th></tr></thead><tbody id="results"></tbody></table></div>
+    </section>
+    <aside class="explanation"><h2 data-i18n="interpreting">How to read the results</h2><p data-i18n="explanationFormat">JFIF indicates features typical of JPEG compression, while PPM indicates features typical of uncompressed images in the training set. This is a prediction from pixels, not a reading of the file format.</p><p data-i18n="explanationQuality">JPEG quality is a model estimate, not a camera setting or a visual rating. For PPM predictions, quality is indicative only. Confidence applies to the PPM / JFIF classification and does not guarantee accuracy.</p></aside>
+    <footer data-i18n="footer">All images are processed locally. This application was generated using AI.</footer>
+  </main>
+</body>
+</html>

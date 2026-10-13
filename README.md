@@ -6,6 +6,10 @@ This is the research repository accompanying the 2026 manuscript:
 > biometric facial images and analyzing its usage for detecting deepfake
 > manipulation*.
 
+**Try the web application:** [Compression Inspector](#compression-inspector-web-application)
+provides a Docker-based interface for analyzing individual images or entire
+folders using pretrained compression models.
+
 Both authors are affiliated with Wroclaw University of Science and Technology.
 Wojciech Wodo's ORCID is
 [`0000-0002-0237-2882`](https://orcid.org/0000-0002-0237-2882). The supplied
@@ -29,6 +33,74 @@ target implemented here is the nominal JPEG quality factor on the conventional
 > or AI-generated. The output is intended as an auxiliary consistency signal
 > alongside trusted acquisition, liveness checks, metadata, sensor evidence,
 > and dedicated manipulation detectors.
+
+## Compression Inspector web application
+
+Compression Inspector is a containerized web application for exploring
+compression traces with pretrained models. Select individual images or an
+entire folder to estimate JPEG quality factors and predict the JFIF or PPM
+class associated with each image's processing history.
+
+### Features
+
+- Single-image and batch analysis through a browser.
+- Pretrained JFIF/PPM classification and JPEG quality-factor estimation.
+- Per-image predictions and an overlaid histogram showing sample counts
+  for both predicted classes across quality bins from 10 to 95.
+- CSV and JSON result exports.
+- English and Polish interfaces, with English as the default.
+- Light and dark themes.
+
+All inference runs inside the container. When you run it on your own
+computer, images are processed locally without external analysis services.
+Uploaded originals are removed after processing.
+
+The application was generated with the assistance of AI.
+
+### Preview
+
+![Image selection in Compression Inspector](docs/media/app-preview.png)
+
+![Prediction results and the JFIF/PPM quality histogram](docs/media/app-preview-results.png)
+
+### Run with Docker
+
+Install Docker and start the application:
+
+```bash
+docker run -d --name compression-inspector \
+  -p 127.0.0.1:8000:8000 \
+  ghcr.io/macsok/compression-inspector:1.0.0
+```
+
+Open [http://localhost:8000](http://localhost:8000) in your browser.
+
+The image includes the application, its runtime dependencies, and pretrained
+model weights. No separate Python installation, model download, or training
+step is required. After downloading the image, analysis can run offline.
+
+To stop and restart the existing container:
+
+```bash
+docker stop compression-inspector
+docker start compression-inspector
+```
+
+### Source code and model weights
+
+Application source code and container configuration are in
+[`compression-web/`](compression-web/).
+See the [application README](compression-web/README.md) for implementation
+details and local build instructions.
+
+Pretrained weights are included in the distributed container image but are
+not committed to this Git repository. Building the application from source
+requires separately supplying the model artifacts expected by
+`compression-web/app/artifacts.json` in `compression-web/app/models/`.
+
+The application provides an inference interface for the trained models.
+Its predictions are subject to the interpretation boundary and scientific
+limitations described in this README.
 
 ## Reported manuscript results
 
@@ -63,7 +135,10 @@ batch extractor, but a publication-grade regeneration must wait until the
 dataset identities, versions, licenses, citations, grouping identifiers, and
 checksums have been recorded. See [Data and results inventory](docs/DATA.md).
 
-No trained model weights are bundled. The canonical modeling workflows train
+No trained model weights are committed to this Git repository. The
+Compression Inspector container image includes pretrained weights for
+inference; the research workflows below train models from the committed
+feature tables. The canonical modeling workflows train
 models from the feature tables and write each run's weights under
 `results/<run-id>/models`. A manual notebook session without a run ID uses
 `results/manual/models`. The `results` directory is created only when a
@@ -159,6 +234,7 @@ benchmark.
 ├── README.md
 ├── pyproject.toml
 ├── requirements.txt
+├── compression-web/        # web application and Docker configuration
 ├── environment/
 │   ├── environment.yml
 │   └── requirements-lock.txt
@@ -226,7 +302,7 @@ Licensing, citation, and dataset-provenance fields that require author input
 are listed in
 [`docs/PUBLICATION_CHECKLIST.md`](docs/PUBLICATION_CHECKLIST.md).
 
-## Quick start
+## Research environment setup
 
 The recovered reference interpreter is Python 3.10.11. Exact direct package
 versions and platform notes are documented in
