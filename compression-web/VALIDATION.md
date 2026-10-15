@@ -34,3 +34,22 @@ exports still require verification in the user's browser.
 After this initial validation, the container was stopped. Docker images remained
 available locally and were not pushed to a registry. To start the application,
 run `docker compose up -d`.
+
+# Anatomy interface refresh — 2026-10-15
+
+- Existing jsdom localization suite passed against the updated application
+  files: selection, analysis, retained reports, histogram, exports, language,
+  theme, accessibility labels and unavailable local storage.
+- Browser review at 1440 px and 390 px, in English/Polish and light/dark themes:
+  no horizontal page overflow; browser console clean.
+- Figure checked at 4× in both themes. Anatomy line checks reported **0 of 70
+  floating ends** at the first and last column.
+- Native range keyboard controls update the carriage, highlighted column and
+  readout. Reduced-motion mode stays still and permits manual column selection.
+- Pointer selection settles correctly, the automatic tour moves, and animation
+  stops when the figure is outside the viewport.
+- Real end-to-end check using a generated 96 × 96 JPEG: successful response,
+  JFIF classification and quality estimate 79.04; report, thumbnail and histogram
+  displayed correctly. Backend/model code was not modified.
+- Sample grayscale uses SVG fill attributes to comply with the existing CSP;
+  no inline styles or relaxed security policy are needed.

@@ -7,13 +7,16 @@
   <script src="{{ url_for('static', filename='theme.js') }}"></script>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='anatomy/iso.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='workbench.css') }}">
   <script defer src="{{ url_for('static', filename='i18n.js') }}"></script>
   <script defer src="{{ url_for('static', filename='histogram.js') }}"></script>
   <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='inspector.js') }}"></script>
 </head>
 <body>
   <header>
-    <a class="brand" href="/">▦ <span>Compression Inspector</span></a>
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Compression <strong>Inspector</strong></span></a>
     <div class="header-controls">
       <span class="status" id="server-status">Connecting to the models…</span>
       <div class="icon-switch" role="group" data-i18n-aria="language" aria-label="Language">
@@ -35,9 +38,27 @@
     </div>
   </header>
   <main>
+    <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
     <p class="eyebrow" data-i18n="eyebrow">IMAGE COMPRESSION ANALYSIS</p>
-    <h1 data-i18n="headline">What lies within the pixels?</h1>
+    <h1 id="hero-title" data-i18n="headline">What lies within the pixels?</h1>
     <p class="intro" data-i18n="intro">Look for traces of JPEG compression. Select images or a whole folder to predict PPM / JFIF and JPEG quality.</p>
+    <a class="hero-link" href="#workspace"><span data-i18n="heroAction">Inspect your images</span><span aria-hidden="true">↗</span></a>
+    <div class="hero-facts"><span><i aria-hidden="true"></i><span data-i18n="originalResolution">Original resolution</span></span><span data-i18n="batchAnalysis">Batch analysis</span><span>CSV / JSON</span></div>
+    </div>
+    <figure class="inspection-figure iso" data-theme="light">
+      <div class="iso-plate">
+        <div class="figure-top"><span data-i18n="figureNumber">FIG. 01</span><span data-i18n="figureTitle">The pixel inspection bench</span></div>
+        <div class="inspection-stage">{% include 'inspector.svg' %}</div>
+        <div class="figure-bottom"><label for="inspection-column" data-i18n="figureHint">Explore a column</label><span class="figure-readout"><span data-i18n="column">Column</span> <output id="inspection-readout" for="inspection-column" data-readout>01 / 08</output></span></div>
+        <div class="figure-controls"><input id="inspection-column" type="range" min="1" max="8" step="1" value="1" data-i18n-aria="figureHint" aria-label="Explore a column"><button type="button" id="inspection-play" class="tour-button" aria-pressed="false" data-i18n="figurePause">Pause</button></div>
+      </div>
+      <figcaption><span class="caption-key" aria-hidden="true"></span><span data-i18n="figureCaption">An illustrative 8 × 8 pixel block. JPEG works with blocks of this size; your analysis uses the full image.</span></figcaption>
+    </figure>
+    </section>
+    <section class="workspace" id="workspace" aria-labelledby="workspace-title">
+    <div class="section-heading"><div><p class="eyebrow" data-i18n="workspaceLabel">YOUR WORKSPACE</p><h2 id="workspace-title" data-i18n="workspaceTitle">From image to evidence.</h2></div><span class="section-index">01 — 03</span></div>
+    <ol class="workflow"><li><span>01</span><div><strong data-i18n="stepSelect">Select images</strong><small data-i18n="stepSelectHint">A file, a batch, or a folder</small></div></li><li><span>02</span><div><strong data-i18n="stepAnalyse">Read the traces</strong><small data-i18n="stepAnalyseHint">Classification & quality estimate</small></div></li><li><span>03</span><div><strong data-i18n="stepExport">Explore & export</strong><small data-i18n="stepExportHint">Every result, in one report</small></div></li></ol>
     <section class="upload-panel" aria-labelledby="upload-title">
       <div id="upload-symbol" class="upload-symbol" aria-hidden="true">↥</div>
       <h2 id="upload-title">Add images to analyse</h2>
@@ -55,6 +76,7 @@
       <div class="actions"><button id="start" class="primary" disabled data-i18n="start">Start analysis</button><button id="stop" class="secondary" hidden data-i18n="stop">Stop after the current image</button></div>
     </div>
     <progress id="progress" value="0" max="1" aria-label="Analysis progress" data-i18n-aria="progress" hidden></progress>
+    </section>
     <section id="results-section" hidden aria-labelledby="results-title">
       <div class="toolbar"><div><p class="eyebrow" data-i18n="report">REPORT</p><h2 id="results-title" data-i18n="results">Analysis results</h2></div><div class="actions"><button id="csv" class="secondary" data-i18n="csv">Download CSV</button><button id="json" class="secondary" data-i18n="json">Download JSON</button></div></div>
       <p id="summary" aria-live="polite"></p>
@@ -66,7 +88,7 @@
       </section>
       <div class="table-wrap"><table><thead><tr><th data-i18n="image">Image</th><th data-i18n="prediction">Prediction</th><th data-i18n="confidence">Model confidence</th><th data-i18n="quality">JPEG quality</th><th data-i18n="details">Details</th></tr></thead><tbody id="results"></tbody></table></div>
     </section>
-    <aside class="explanation"><h2 data-i18n="interpreting">How to read the results</h2><p data-i18n="explanationFormat">JFIF indicates features typical of JPEG compression, while PPM indicates features typical of uncompressed images in the training set. This is a prediction from pixels, not a reading of the file format.</p><p data-i18n="explanationQuality">JPEG quality is a model estimate, not a camera setting or a visual rating. For PPM predictions, quality is indicative only. Confidence applies to the PPM / JFIF classification and does not guarantee accuracy.</p></aside>
+    <aside class="explanation"><div><p class="eyebrow" data-i18n="fieldNotes">FIELD NOTES</p><h2 data-i18n="interpreting">How to read the results</h2></div><div><h3 data-i18n="formatNote">A signature in the pixels</h3><p data-i18n="explanationFormat">JFIF indicates features typical of JPEG compression, while PPM indicates features typical of uncompressed images in the training set. This is a prediction from pixels, not a reading of the file format.</p></div><div><h3 data-i18n="qualityNote">An estimate, with context</h3><p data-i18n="explanationQuality">JPEG quality is a model estimate, not a camera setting or a visual rating. For PPM predictions, quality is indicative only. Confidence applies to the PPM / JFIF classification and does not guarantee accuracy.</p></div></aside>
     <footer data-i18n="footer">All images are processed locally. This application was generated using AI.</footer>
   </main>
 </body>

@@ -1,6 +1,15 @@
 'use strict';
 const messages = {
   en: {
+    heroAction: 'Inspect your images', originalResolution: 'Original resolution', batchAnalysis: 'Batch analysis',
+    figureStill: 'Still',
+    figureNumber: 'FIG. 01', figureTitle: 'The pixel inspection bench', figureHint: 'Explore a column', column: 'Column', figurePause: 'Pause', figurePlay: 'Play',
+    figureCaption: 'An illustrative 8 × 8 pixel block. JPEG works with blocks of this size; your analysis uses the full image.',
+    workspaceLabel: 'YOUR WORKSPACE', workspaceTitle: 'From image to evidence.',
+    stepSelect: 'Select images', stepSelectHint: 'A file, a batch, or a folder',
+    stepAnalyse: 'Read the traces', stepAnalyseHint: 'Classification & quality estimate',
+    stepExport: 'Explore & export', stepExportHint: 'Every result, in one report',
+    fieldNotes: 'FIELD NOTES', formatNote: 'A signature in the pixels', qualityNote: 'An estimate, with context',
     pageTitle: 'Compression Inspector — image analysis', language: 'Language',
     theme: 'Theme', themeLight: 'Light', themeDark: 'Dark',
     languageEnglish: 'English', languagePolish: 'Polish',
@@ -31,6 +40,15 @@ const messages = {
     'error.invalid_features': 'Cannot calculate features: {features}. The image may be uniform or too small.', 'error.server': 'Analysis failed. Details are available in the server logs.',
   },
   pl: {
+    heroAction: 'Sprawdź swoje obrazy', originalResolution: 'Oryginalna rozdzielczość', batchAnalysis: 'Analiza wielu plików',
+    figureStill: 'Bez ruchu',
+    figureNumber: 'RYS. 01', figureTitle: 'Stanowisko inspekcji pikseli', figureHint: 'Wybierz kolumnę', column: 'Kolumna', figurePause: 'Pauza', figurePlay: 'Odtwórz',
+    figureCaption: 'Przykładowy blok 8 × 8 pikseli. JPEG operuje na blokach tej wielkości; analiza obejmuje cały obraz.',
+    workspaceLabel: 'TWOJE STANOWISKO', workspaceTitle: 'Od obrazu do śladów kompresji.',
+    stepSelect: 'Wybierz obrazy', stepSelectHint: 'Jeden plik, wiele zdjęć lub folder',
+    stepAnalyse: 'Odczytaj ślady', stepAnalyseHint: 'Klasyfikacja i estymacja jakości',
+    stepExport: 'Sprawdź i eksportuj', stepExportHint: 'Wszystkie wyniki w jednym raporcie',
+    fieldNotes: 'NOTATKI DO ANALIZY', formatNote: 'Ślad zapisany w pikselach', qualityNote: 'Estymacja z kontekstem',
     pageTitle: 'Compression Inspector — analiza obrazów', language: 'Język',
     theme: 'Motyw', themeLight: 'Jasny', themeDark: 'Ciemny',
     languageEnglish: 'Angielski', languagePolish: 'Polski',

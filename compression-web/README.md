@@ -35,6 +35,19 @@ on their computer. Docker must support Linux containers.
 
 ## Using the application
 
+The opening illustration is an interactive pixel inspection bench built with
+[Anatomy](https://github.com/wheresryan22/anatomy). Its slider selects one of
+eight columns in an illustrative 8 × 8 sample; it is independent of uploaded
+images and model results. Use the slider with a pointer or arrow keys, or pause
+the automatic tour. Motion stops outside the viewport and respects the system's
+reduced-motion preference. The illustration supports both interface languages
+and themes, with no external fonts, scripts, or runtime services.
+
+To change its geometry, edit `tools/build-inspector.mjs` and run
+`node tools/build-inspector.mjs`. The generated `app/templates/inspector.svg`
+is checked in; building and running the Docker application does not need Node.
+The vendored geometry kit's MIT license is in `tools/anatomy/LICENSE`.
+
 The default interface language is English. Buttons showing the UK and Polish
 flags in the upper right corner let you select the language. Your choice is
 saved locally in the browser. Changing the language updates messages, errors,
