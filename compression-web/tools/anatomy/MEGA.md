@@ -38,6 +38,20 @@ with its complete travel kept clear of the neighboring processor and memory.
 Build with `node tools/build-engine.mjs`. The generated SVG is checked in.
 No build kit, third-party JS, font or image is downloaded by the page.
 
+Run `node tools/build-engine.mjs --audit` to verify all 149 structural solids
+in their final SVG paint order. The vendored Anatomy ray-casting audit checks
+32 poses: both sample patterns at half-column intervals, plus alternating
+cursor limits. It includes the moving bridge and spectrum cursors. Rounded
+prism envelopes match the rendered plans; small decorative bevels and flat
+surface markings are not modeled by this depth check. Review close-ups and
+run the browser line check as well. Audit modules are build-time tools only.
+
+Parts that surround other parts must be split across their paint order:
+rear memory latch / board / front latch; rear rail / tray / front rail;
+far processor terminals / socket / near terminals; far package clamps /
+package / near clamps. The scope precedes the sensor rails and the small
+capacitor row precedes the power packages.
+
 ## Refinement: signal analyser
 
 Extend the existing Hero with a physical eight-channel spectrum instrument.

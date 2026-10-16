@@ -4,7 +4,7 @@ FROM ghcr.io/macsok/compression-inspector@sha256:0c378dc5bc38c7f388cc570c2f0546c
 FROM python:3.11-slim-bookworm AS runtime
 LABEL org.opencontainers.image.source="https://github.com/Macsok/JPEG-Compression-Traces-in-Facial-Biometrics" \
       org.opencontainers.image.title="Compression Inspector" \
-      org.opencontainers.image.version="1.1.0"
+      org.opencontainers.image.version="1.1.1"
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     MPLCONFIGDIR=/tmp/matplotlib OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 WORKDIR /opt/compression

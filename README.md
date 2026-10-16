@@ -80,7 +80,7 @@ If you already have the repository, run the last two commands from
 The previous Classic layout is available at
 [http://localhost:8000/?view=classic](http://localhost:8000/?view=classic).
 
-Compose uses **`ghcr.io/macsok/compression-inspector:1.1.0`**, which contains the
+Compose uses **`ghcr.io/macsok/compression-inspector:1.1.1`**, which contains the
 current application, its runtime dependencies and pretrained model weights.
 No source mounts, separate Python installation, model download or training step
 are needed. Only `compose.yaml` is required to run the published image.

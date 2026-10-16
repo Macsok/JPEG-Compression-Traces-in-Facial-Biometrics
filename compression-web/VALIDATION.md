@@ -150,3 +150,35 @@ Anatomy `drive.mjs` tool. Preview uses `compose.preview.yaml` and the packaged
   Anonymous registry inspection confirmed the Linux/amd64 manifest matches the
   tested image. The previous 1.0.0 tag was not changed. The isolated test project
   was removed after verification.
+
+# Scanner head occlusion fix — 2026-10-16
+
+- Draw the optical window before its housing and the housing before the beam.
+  Two carriage cheeks now connect the lower housing to its top cover around
+  the beam. Uprights end at their mounting caps instead of intersecting them.
+  Regenerated the checked-in SVG (149 structural solids).
+- Anatomy depth-order verification of the bridge against neighboring slabs
+  passed at 0%, 25%, 50%, 75% and 100% of travel, using the rendered part order.
+- Reviewed columns 1, 4 and 8 in both themes, plus 4× head close-ups.
+  All six line checks reported 0 floating ends; browser console clean.
+- The existing browser interaction suite passed against local Compose preview,
+  including pause, keyboard controls, sample changes and real JPEG analysis.
+  This source fix is available in local preview; the published GHCR 1.1.0 image
+  still contains the previous geometry.
+
+# Whole-instrument layer correction — 2026-10-16
+
+- Corrected memory latch/board order and removed their intersecting edges.
+  Moved the scope behind the sensor rails; split the rail drawing around the
+  sample tray and placed each rear end stop behind its guide.
+- Moved the capacitor row behind the power packages. Split processor terminal
+  banks around the socket and mounting clamps around the package.
+- Added `node tools/build-engine.mjs --audit`, using vendored Anatomy tools.
+  It records all 149 rounded-prism envelopes and reads their actual final SVG
+  order. All 32 sampled scan/spectrum poses passed with 0 incorrect overlaps.
+  Decorative bevels and surface engravings require separate visual checks.
+- Reviewed upper/lower instrument regions at 4× in light and dark themes.
+  Browser line checks at columns 1, 4 and 8 passed in both themes: 0 floating
+  ends among 134 ends on 260 lines. The application browser suite passed,
+  including pause, sample switching, scrolling and real JPEG analysis.
+- Refreshed local Compose preview on port 8000. No new GHCR image published.

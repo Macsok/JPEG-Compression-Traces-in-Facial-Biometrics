@@ -21,7 +21,7 @@ If your terminal is already in `compression-web/`, omit the `cd` command.
 Open **http://localhost:8000** for MEGA, or
 **http://localhost:8000/?view=classic** for the previous layout.
 
-`compose.yaml` uses **`ghcr.io/macsok/compression-inspector:1.1.0`**. This standalone
+`compose.yaml` uses **`ghcr.io/macsok/compression-inspector:1.1.1`**. This standalone
 Linux/amd64 image contains the current interface, inference code, runtime and
 pretrained weights. Only the Compose file is needed to run it; there are no
 source or model mounts and no separate Python installation or training step.
@@ -74,7 +74,7 @@ docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
 ```
 
 This mounts `app/static`, `app/templates`, `server.py` and `inference.py` read-only
-from the checkout, using the 1.1.0 runtime and models. Keep these source files in
+from the checkout, using the 1.1.1 runtime and models. Keep these source files in
 place and use both `-f` options for subsequent Compose commands. Restart with
 `docker compose -f compose.yaml -f compose.preview.yaml restart compression`
 after Python or template edits. Changes to dependencies or other Python modules
@@ -211,13 +211,13 @@ artificial value to the model.
 
 Build and verify the image from this directory before publishing. For a new
 release, update the version in `Dockerfile` and both Compose files, and use the
-same version in these commands. For 1.1.0:
+same version in these commands. For 1.1.1:
 
 ```bash
-docker build --target test -t compression-inspector:test-1.1.0 .
-docker build -t ghcr.io/macsok/compression-inspector:1.1.0 .
+docker build --target test -t compression-inspector:test-1.1.1 .
+docker build -t ghcr.io/macsok/compression-inspector:1.1.1 .
 docker login ghcr.io -u macsok
-docker push ghcr.io/macsok/compression-inspector:1.1.0
+docker push ghcr.io/macsok/compression-inspector:1.1.1
 ```
 
 For the login password use a GitHub personal access token (classic) with
@@ -233,7 +233,7 @@ and model weights, so `compose.preview.yaml` is not needed.
 You can also distribute the image as a file:
 
 ```bash
-docker save -o compression-inspector.tar ghcr.io/macsok/compression-inspector:1.1.0
+docker save -o compression-inspector.tar ghcr.io/macsok/compression-inspector:1.1.1
 docker load -i compression-inspector.tar
 docker compose up -d --no-build
 ```

@@ -11,9 +11,19 @@ const S = k.solidSvg, L = k.lineSvg;
 const at = p => k.iso(p,P);
 const pieces=[];
 let solids=0;
+const depthParts=[];
+let motion={piece:'static',move:[0,0,0]};
+// Temporary identifiers let the audit read the final SVG paint order, rather
+// than assuming that geometry creation and group insertion have the same order.
+const recordSolid=(svg,plan,z,height,steps=4,moving=motion)=>{
+  const id=depthParts.length;
+  depthParts.push({plan,z,height,steps,...moving});
+  return svg.replace('<g',`<g data-depth-id="${id}"`);
+};
 const slab=(x,y,w,d,z,h,tone='mid',r=1.5,extra={})=>{
   solids++;
-  return S(k.slabOf({x,y,w,d,r},z,h,P,4,Math.min(.8,h/3)),{tone,...extra});
+  const plan={x,y,w,d,r};
+  return recordSolid(S(k.slabOf(plan,z,h,P,4,Math.min(.8,h/3)),{tone,...extra}),plan,z,h,4,extra.auditMotion??motion);
 };
 const groove=(x,y,w,d,z,tone='faint',r=1)=>L(k.planOutline({x,y,w,d,r},z,P,4),{tone});
 const screw=(x,y,z,size=1.8)=>L(k.ring(x,y,size,z,P,16),{tone:'mid'})+k.dotsSvg([at([x,y,z])],{size:.55,tone:'hi'});
@@ -28,7 +38,7 @@ for(const [x,y] of byDepth(k.corners(BASE,26))) {
   pieces.push(slab(x-9,y-9,18,18,-19,5,'mid',2));
 }
 solids++;
-pieces.push(S(k.slabOf(BASE,-14,12,P,8,1.4),{tone:'mid',inner:L(k.sideSeam(BASE,-8,P,8),{tone:'lo'})}));
+pieces.push(recordSolid(S(k.slabOf(BASE,-14,12,P,8,1.4),{tone:'mid',inner:L(k.sideSeam(BASE,-8,P,8),{tone:'lo'})}),BASE,-14,12,8));
 pieces.push(slab(-216,-174,432,348,-2,2,'lo',11));
 pieces.push(groove(-211,-169,422,338,0,'lo',8));
 pieces.push(bolts(BASE,0,9));
@@ -60,14 +70,16 @@ pieces.push(group('engine-traces',tracks.join('')+pulses.join('')));
 let memory='';
 for(const x of [-180,-80]) {
   memory+=slab(x,-146,84,13,4,5,'lo');
-  memory+=slab(x+4,-142,76,3,9,32,'mid',.6);
+  // Rear latch precedes the board; the front latch follows its chips.
+  memory+=slab(x,-146,5,13,9,8,'hi',.7);
+  memory+=slab(x+5,-142,74,3,9,32,'mid',.6);
   for(let j=0;j<4;j++) {
     memory+=slab(x+9+j*16,-139,12,3,18,15,'mid',.6);
     // Contact fingers on the board's visible face are flat engravings.
     for(let n=0;n<3;n++) memory+=L(k.pathOf([[x+10+j*16+n*3,-138.9,11],[x+11.2+j*16+n*3,-138.9,11],[x+11.2+j*16+n*3,-138.9,16],[x+10+j*16+n*3,-138.9,16]].map(at),true),{tone:'lo'});
   }
-  for(const end of [x,x+79]) memory+=slab(end,-146,5,13,9,8,'hi',.7);
-  memory+=L(k.sideSeam({x:x+4,y:-142,w:76,d:3,r:.6},37,P,4),{tone:'lo'});
+  memory+=slab(x+79,-146,5,13,9,8,'hi',.7);
+  memory+=L(k.sideSeam({x:x+5,y:-142,w:74,d:3,r:.6},37,P,4),{tone:'lo'});
 }
 pieces.push(group('engine-memory',memory));
 
@@ -77,31 +89,6 @@ cooling+=slab(40,-142,86,55,9,5,'mid',2);
 cooling+=screw(39,-143,9)+screw(127,-87,9);
 for(let i=0;i<12;i++) cooling+=slab(42+i*7,-139,2.6,49,14,28,'mid',.5);
 pieces.push(group('engine-cooling',cooling));
-
-// Sensor cartridge. The bridge travels only along x and clears every neighbor.
-let sensor='';
-for(const y of [-112,26]) {
-  sensor+=slab(-184,y-4,164,12,4,5,'lo');
-  sensor+=slab(-179,y-1,154,6,9,5,'mid',.5);
-  for(const x of [-185,-24]) sensor+=slab(x,y-4,5,12,9,11,'hi',.8)+screw(x+2.5,y+2,20,1.2);
-}
-sensor+=slab(-170,-99,134,117,4,4,'lo',3);
-sensor+=slab(-165,-94,124,107,8,3,'hi',2);
-for(let col=0;col<8;col++) {
-  let cells='';
-  for(let row=0;row<8;row++) {
-    const shade=samplePixel(col,row);
-    const d=k.planOutline({x:-161+col*14.6,y:-90+row*12.2,w:13.6,d:11.2,r:.6},11.12,P,3);
-    cells+=`<path class="engine-pixel" data-pixel="${col},${row}" fill="rgb(${shade},${shade},${shade})" d="${d}"/>`;
-  }
-  sensor+=`<g data-engine-column="${col}">${cells}</g>`;
-}
-sensor+=slab(-174,44,139,6,4,.7,'lo',.7);
-const scale=k.topTicks(-170,-38,4,4,44,4.7,[2,4],P);
-sensor+=L(scale.minor,{tone:'lo'})+L(scale.major,{tone:'mid'});
-pieces.push(group('engine-sensor',sensor));
-const reticle=groove(-161,-90,13.6,96.6,11.2,'hi',.6);
-pieces.push(group('engine-reticle',reticle));
 
 // A real inset scope. The trace lies in the glass plane, clipped to the bezel.
 let scope=slab(-201,-106,15,132,4,3,'lo',2);
@@ -116,23 +103,50 @@ for(let i=0;i<8;i++) scope+=`<circle data-scope-point="${i}" class="engine-scope
 scope+='</g></g>';
 pieces.push(group('engine-scope',scope));
 
+// Sensor cartridge. The bridge travels only along x and clears every neighbor.
+const sensorRail=y=>slab(-184,y-4,164,12,4,5,'lo')
+  +slab(-185,y-4,5,12,9,11,'hi',.8)+screw(-182.5,y+2,20,1.2)
+  +slab(-179,y-1,154,6,9,5,'mid',.5)
+  +slab(-24,y-4,5,12,9,11,'hi',.8)+screw(-21.5,y+2,20,1.2);
+let sensor=sensorRail(-112);
+sensor+=slab(-170,-99,134,117,4,4,'lo',3);
+sensor+=slab(-165,-94,124,107,8,3,'hi',2);
+for(let col=0;col<8;col++) {
+  let cells='';
+  for(let row=0;row<8;row++) {
+    const shade=samplePixel(col,row);
+    const d=k.planOutline({x:-161+col*14.6,y:-90+row*12.2,w:13.6,d:11.2,r:.6},11.12,P,3);
+    cells+=`<path class="engine-pixel" data-pixel="${col},${row}" fill="rgb(${shade},${shade},${shade})" d="${d}"/>`;
+  }
+  sensor+=`<g data-engine-column="${col}">${cells}</g>`;
+}
+// The front guide occludes the tray edge, and its rear stop sits behind it.
+sensor+=sensorRail(26);
+sensor+=slab(-174,44,139,6,4,.7,'lo',.7);
+const scale=k.topTicks(-170,-38,4,4,44,4.7,[2,4],P);
+sensor+=L(scale.minor,{tone:'lo'})+L(scale.major,{tone:'mid'});
+pieces.push(group('engine-sensor',sensor));
+const reticle=groove(-161,-90,13.6,96.6,11.2,'hi',.6);
+pieces.push(group('engine-reticle',reticle));
+
 // Power-stage packages on the right edge, seated on ceramic pads.
 let power='';
+for(let i=0;i<4;i++) power+=slab(140,-139+i*12,11,8,4,7,'hi',1);
 for(let i=0;i<5;i++) {
   power+=slab(153,-96+i*30,32,24,4,2,'lo',1.2);
   power+=slab(157,-92+i*30,24,16,6,10,'mid',1.5);
   power+=groove(160,-89+i*30,18,10,16,'lo');
   power+=screw(156,-94+i*30,6,1);
 }
-for(let i=0;i<4;i++) power+=slab(140,-139+i*12,11,8,4,7,'hi',1);
 pieces.push(group('engine-power',power));
 
 // Exposed processor package and a small, truly planar die pattern.
-let core=slab(31,-50,100,108,4,4,'lo',4);
-for(let i=0;i<8;i++) {
-  core+=slab(27,-40+i*11,4,6,4,1,'lo',.3);
-  core+=slab(131,-40+i*11,4,6,4,1,'lo',.3);
-}
+let core='';
+// Split the terminal banks around the socket: far pins, body, near pins.
+for(let i=0;i<8;i++) core+=slab(27,-40+i*11,4,6,4,1,'lo',.3);
+core+=slab(31,-50,100,108,4,4,'lo',4);
+for(let i=0;i<8;i++) core+=slab(131,-40+i*11,4,6,4,1,'lo',.3);
+for(const y of [-42,39]) core+=slab(31,y,8,11,8,9,'mid',1)+screw(35,y+5.5,17);
 core+=slab(39,-42,84,92,8,6,'mid',3);
 core+=slab(47,-34,68,76,14,2,'hi',1.6);
 core+=slab(53,-28,56,64,16,2,'hi',1.2,{lit:true});
@@ -141,7 +155,7 @@ for(let i=0;i<8;i++) {
   for(let j=0;j<8;j++) row+=groove(56+i*6.3,-25+j*7.2,4.8,5.6,18,'lo',.3);
   core+=`<g data-engine-die="${i}">${row}</g>`;
 }
-for(const [x,y] of [[31,-42],[123,-42],[31,39],[123,39]]) core+=slab(x,y,8,11,8,9,'mid',1)+screw(x+4,y+5.5,17);
+for(const [x,y] of [[123,-42],[123,39]]) core+=slab(x,y,8,11,8,9,'mid',1)+screw(x+4,y+5.5,17);
 pieces.push(group('engine-core',core));
 
 // Output daughterboard, a bank of eight independently lit channel windows.
@@ -158,7 +172,7 @@ for(let i=0;i<8;i++) {
   output+=`<rect data-spectrum-fill="${i}" class="engine-meter-fill" x="10" y="-24" width="4" height="1" rx=".5"/>`;
   for(const sx of [3,21]) output+=`<circle class="engine-meter-screw" cx="${sx}" cy="-58" r="1.1"/><circle class="engine-scope-point" cx="${sx}" cy="-58" r=".25"/>`;
   output+='</g>';
-  output+=`<g data-spectrum-cursor="${i}">${slab(x+5,112,14,2.4,23,3,'hi',.4,{lit:true})}</g>`;
+  output+=`<g data-spectrum-cursor="${i}">${slab(x+5,112,14,2.4,23,3,'hi',.4,{lit:true,auditMotion:{piece:`meter-${i}`,move:[0,0,28]}})}</g>`;
   output+=slab(x+3,122,18,11,19,.8,'lo',1);
   output+=`<path class="engine-window" data-engine-output="${i}" d="${k.planOutline({x:x+5,y:124,w:14,d:7,r:1},19.9,P,4)}"/>`;
   output+=screw(x+12,136,19,1);
@@ -180,26 +194,41 @@ edge+=groove(153,129,26,5,4.8,'lo',.4);
 pieces.push(group('engine-edge',edge));
 
 // Moving assembly, built once. No per-frame geometry or large DOM rebuild.
+motion={piece:'bridge',move:[102.2,0,0]};
 let bridge='';
 for(const y of [-112,26]) {
   bridge+=slab(-166,y-4,16,12,14,6,'mid',1);
-  bridge+=slab(-163,y-1,10,6,20,53,'mid',.7);
+  bridge+=slab(-163,y-1,10,6,20,49,'mid',.7);
   bridge+=slab(-166,y-4,16,12,69,4,'hi',1);
   bridge+=screw(-158,y+2,73,1.5);
 }
+// The optical window sits UNDER the housing. Painting it after the housing
+// exposes its hidden top face and makes the head look like separated plates.
+bridge+=slab(-170,-53,24,30,58,2,'hi',1,{lit:true});
+bridge+=slab(-173,-56,30,36,60,13,'mid',2);
+// A carriage wraps the beam: far cheek, beam, near cheek, then the cover.
+// The cheeks bridge z=73..82, so the cover has real support on both sides.
+bridge+=slab(-173,-56,7,36,73,9,'mid',.7);
 bridge+=slab(-166,-116,16,154,73,9,'hi',1.8);
 bridge+=groove(-162,-112,8,146,82,'lo');
-bridge+=slab(-173,-56,30,36,60,13,'mid',2);
-bridge+=slab(-170,-53,24,30,58,2,'hi',1,{lit:true});
+bridge+=slab(-150,-56,7,36,73,9,'mid',.7);
 bridge+=slab(-171,-54,26,32,82,3,'hi',1.5);
 for(let i=0;i<5;i++) bridge+=groove(-167,-49+i*4.4,18,1.8,85,'lo',.7);
 bridge+=screw(-168,-51,85,1.2)+screw(-148,-25,85,1.2);
 const vector=k.axisVector(P,[1,0,0]);
 pieces.push(`<g id="engine-bridge" data-vector="${vector.join(',')}" data-travel="102.2">${bridge}</g>`);
 
-const svg=`<!-- Generated by tools/build-engine.mjs. ${solids} structural solids; surface inlays are separate. -->
+const markedSvg=`<!-- Generated by tools/build-engine.mjs. ${solids} structural solids; surface inlays are separate. -->
 <svg id="engine-svg" class="iso-svg" data-lift-vector="${k.axisVector(P,[0,0,1]).join(',')}" viewBox="0 0 1000 800" aria-hidden="true" focusable="false">
 <g id="engine-camera">${pieces.join('\n')}</g>
 </svg>\n`;
+if(process.argv.includes('--audit')) {
+  const {auditEngine}=await import('./audit-engine.mjs');
+  const ids=[...markedSvg.matchAll(/ data-depth-id="(\d+)"/g)].map(match=>Number(match[1]));
+  if(ids.length!==solids||new Set(ids).size!==solids) throw new Error('Every rendered solid must have one audit shape');
+  const orderedParts=ids.map(id=>depthParts[id]);
+  auditEngine(orderedParts,P);
+}
+const svg=markedSvg.replace(/ data-depth-id="\d+"/g,'');
 writeFileSync(fileURLToPath(new URL('../app/templates/engine.svg',import.meta.url)),svg);
 console.log(`Built engine: ${solids} solids, ${(svg.length/1024).toFixed(1)} KiB`);
