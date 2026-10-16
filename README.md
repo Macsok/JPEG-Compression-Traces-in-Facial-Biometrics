@@ -63,28 +63,46 @@ The application was generated with the assistance of AI.
 
 ![Prediction results and the JFIF/PPM quality histogram](docs/media/app-preview-results.png)
 
-### Run with Docker
+### Run with Docker Compose
 
-Install Docker and start the application:
+Install Docker with the Compose plugin (Docker Desktop includes it). Clone the
+repository and enter the application directory:
 
 ```bash
-docker run -d --name compression-inspector \
-  -p 127.0.0.1:8000:8000 \
-  ghcr.io/macsok/compression-inspector:1.0.0
+git clone https://github.com/Macsok/JPEG-Compression-Traces-in-Facial-Biometrics.git
+cd JPEG-Compression-Traces-in-Facial-Biometrics/compression-web
+docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
 ```
 
+If you already have the repository, run the last command from `compression-web/`.
 Open [http://localhost:8000](http://localhost:8000) in your browser.
+The previous Classic layout is available at
+[http://localhost:8000/?view=classic](http://localhost:8000/?view=classic).
 
-The image includes the application, its runtime dependencies, and pretrained
-model weights. No separate Python installation, model download, or training
-step is required. After downloading the image, analysis can run offline.
+Use **both Compose files** to run the current repository version. The base file
+configures the service, port and resource settings; `compose.preview.yaml` uses
+`ghcr.io/macsok/compression-inspector:1.0.0` for the runtime and pretrained weights,
+then mounts the current interface and inference code read-only from this checkout.
+Running the 1.0.0 image alone shows the older application bundled in that image.
+Keep the checkout in place while using this configuration.
 
-To stop and restart the existing container:
+The first start downloads the image if it is not already available. No separate
+Python installation, model download or training step is required. Subsequent
+starts and analysis can run offline. A source build with `--build` is a separate
+option that requires local model files; see the application README below.
+
+Run these commands from `compression-web/` to view logs, restart, or stop and
+remove the application container:
 
 ```bash
-docker stop compression-inspector
-docker start compression-inspector
+docker compose -f compose.yaml -f compose.preview.yaml logs -f compression
+docker compose -f compose.yaml -f compose.preview.yaml restart compression
+docker compose -f compose.yaml -f compose.preview.yaml down
 ```
+
+To start it again, repeat the `up -d --no-build` command. After pulling source
+updates, repeat that command and then `restart compression` with both Compose
+files to reload Python code and cached templates.
 
 ### Source code and model weights
 

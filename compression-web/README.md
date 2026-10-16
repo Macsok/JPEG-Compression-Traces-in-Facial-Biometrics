@@ -6,32 +6,67 @@ estimate JPEG quality. Results include thumbnails, features, probabilities,
 and CSV/JSON exports. Once the Docker image has been downloaded, the interface
 and analysis work without an internet connection.
 
-## Getting started
+## Getting started with Docker Compose
 
-Run the following command from this directory:
+Install Docker with the Compose plugin (included in Docker Desktop). From the
+repository root, enter `compression-web/` and start the current application:
+
+```bash
+cd compression-web
+docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+```
+
+If your terminal is already in `compression-web/`, omit the `cd` command.
+Open **http://localhost:8000** for MEGA, or
+**http://localhost:8000/?view=classic** for the previous layout.
+
+Use both Compose files for every command in this setup. `compose.yaml` provides
+the service configuration; `compose.preview.yaml` selects the packaged 1.0.0
+image for its runtime and pretrained weights and mounts the current UI,
+`server.py` and `inference.py` from this checkout read-only. Keep these files
+in place. The image alone contains an older interface; this overlay runs the
+current repository version without requiring model files in Git.
+
+The first start downloads the image if needed and requires internet access.
+Later starts and analysis work offline with the cached image. No separate
+Python installation, model download, training or source build is required.
+
+From `compression-web/`:
+
+```bash
+# Check status and follow logs (Ctrl+C exits the log view).
+docker compose -f compose.yaml -f compose.preview.yaml ps
+docker compose -f compose.yaml -f compose.preview.yaml logs -f compression
+
+# Reload Python code or cached templates after editing or pulling updates.
+docker compose -f compose.yaml -f compose.preview.yaml restart compression
+
+# Stop and remove the container; keep the downloaded image and source files.
+docker compose -f compose.yaml -f compose.preview.yaml down
+```
+
+To start again, repeat `up -d --no-build` with both files. After pulling updates,
+run it again to apply any Compose changes, then restart the service to reload
+mounted Python code and cached templates.
+
+At least 2 GB of available RAM is recommended; larger images may require more.
+The application runs on the CPU. Users do not need a GPU or a notebook on their
+computer. Docker must support Linux containers.
+
+## Build a standalone image from source
+
+This is an alternative to the setup above. Model weights are not committed to
+Git: first place all four model artifacts listed in `app/artifacts.json` in
+`app/models/`, with the expected checksums. Then run from `compression-web/`:
 
 ```bash
 docker compose up --build -d
 ```
 
-Open **http://localhost:8000**. The first image build requires internet access.
-Subsequent runs use the models already included in the image.
-
-```bash
-docker compose logs -f
-docker compose down
-```
-
-Alternatively, without Compose:
-
-```bash
-docker build -t compression-inspector:1.0.0 .
-docker run --rm -p 127.0.0.1:8000:8000 compression-inspector:1.0.0
-```
-
-At least 2 GB of available RAM is recommended; larger images may require more.
-The application runs on the CPU. Users do not need a GPU, Python, or a notebook
-on their computer. Docker must support Linux containers.
+This uses only `compose.yaml`, builds the current code and weights into the
+local `compression-inspector:1.0.0` image, and runs without source mounts.
+For this setup use `docker compose logs -f compression`, `docker compose restart
+compression` and `docker compose down`. Rebuild after source changes.
 
 ## Using the application
 
@@ -62,17 +97,6 @@ To change the geometry, edit `tools/build-engine.mjs` (MEGA) or
 Generated SVGs in `app/templates/` are checked in; building and running the
 Docker application does not need Node. The vendored geometry kit's MIT license
 is in `tools/anatomy/LICENSE`.
-
-For a local preview when the model files are available only in the packaged
-image, run from this directory:
-
-```bash
-docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
-```
-
-This uses the 1.0.0 image's model weights and mounts the current UI and inference
-code read-only. Restart the service after Python or template edits. The regular
-source build still requires the model files in `app/models/` as described below.
 
 The default interface language is English. Buttons showing the UK and Polish
 flags in the upper right corner let you select the language. Your choice is
@@ -112,13 +136,14 @@ Starting again creates a new report.
 
 Default limits: 64 MB per request (the file must leave room for multipart
 headers), 24 million pixels, and a minimum image size of 16 × 16 pixels.
-Change `MAX_UPLOAD_MB` and `MAX_IMAGE_PIXELS` in Compose or with
-`docker run -e ...`. Increasing the pixel limit increases memory usage and
-analysis time.
+Change `MAX_UPLOAD_MB` and `MAX_IMAGE_PIXELS` in `compose.yaml`, then repeat
+the Compose `up` command for your setup to recreate the service with the new
+settings. Increasing the pixel limit increases memory usage and analysis time.
 
 ## Models and notebook compatibility
 
-`app/models/` contains copies of the original files, approximately 448 MiB in total:
+The packaged image contains these four original model artifacts, approximately
+448 MiB in total. A source build expects them in `app/models/`:
 
 - `best_model_svm_(rbf).pkl`: SVC, with labels 0 = JFIF and 1 = PPM.
 - `scaler.pkl`: scaling for the classifier's 15 features.
@@ -170,7 +195,8 @@ artificial value to the model.
 
 ## Distribution through a registry
 
-Replace `REGISTRY/NAMESPACE` with your registry and namespace:
+First build the standalone image as described above. Replace
+`REGISTRY/NAMESPACE` with your registry and namespace:
 
 ```bash
 docker tag compression-inspector:1.0.0 REGISTRY/NAMESPACE/compression-inspector:1.0.0
@@ -178,11 +204,18 @@ docker login REGISTRY
 docker push REGISTRY/NAMESPACE/compression-inspector:1.0.0
 ```
 
-Recipients can run the image without this repository or separate model files:
+Recipients need only a copy of `compose.yaml`: remove its `build: .` line and
+set `image:` to `REGISTRY/NAMESPACE/compression-inspector:1.0.0`. From the folder
+containing that file, run:
 
 ```bash
-docker run --rm -p 127.0.0.1:8000:8000 REGISTRY/NAMESPACE/compression-inspector:1.0.0
+docker compose pull
+docker compose up -d --no-build
 ```
+
+This standalone image contains the code and models from your build, so neither
+`compose.preview.yaml` nor a source checkout is needed. Open
+**http://localhost:8000**; stop with `docker compose down`.
 
 You can also distribute the image as a file:
 
