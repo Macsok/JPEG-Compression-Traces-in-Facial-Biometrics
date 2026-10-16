@@ -41,6 +41,24 @@ class Predictor:
         # One inference at a time; avoid duplicating the large forest per process.
         self.regressor.n_jobs = 1
 
+    def classification_diagnostics(self, scaled):
+        """Detect collapse to the RBF intercept, not general model reliability.
+
+        The sum of absolute kernel contributions bounds the sample's influence
+        on the decision. Cancellation between strong contributions is therefore
+        not mistaken for lack of support. The tolerance is in decision units.
+        """
+        delta = self.classifier.support_vectors_ - scaled[0]
+        kernels = np.exp(-self.classifier._gamma * np.einsum('ij,ij->i', delta, delta))
+        influence = float(np.dot(np.abs(self.classifier.dual_coef_[0]), kernels))
+        return {
+            'status': 'baseline' if influence <= 1e-6 else 'responsive',
+            'kernel_contribution_bound': influence,
+            'max_kernel_similarity': float(kernels.max()),
+            'decision': float(self.classifier.decision_function(scaled)[0]),
+            'intercept': float(self.classifier.intercept_[0]),
+        }
+
     def predict(self, path):
         indicators = detect_jpeg_compression(str(path))
         if not isinstance(indicators, dict):
@@ -60,6 +78,7 @@ class Predictor:
             'format': 'PPM' if label == 1 else 'JFIF',
             'prediction': label,
             'confidence': float(max(raw_probabilities) * 100),
+            'classification_diagnostics': self.classification_diagnostics(scaled),
             'probabilities': probabilities,
             'predicted_quality': quality,
             'indicators': indicators,

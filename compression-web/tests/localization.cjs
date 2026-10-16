@@ -65,6 +65,9 @@ function create(saved, blockedStorage = false, savedTheme) {
   ui.finish();
   for (let i = 0; i < 20 && $('files').disabled; i++) await tick();
   assert.equal($('results').children.length, 2);
+  assert.equal(w.document.querySelectorAll('thead th').length, 4);
+  assert.equal($('results').firstElementChild.cells.length, 4);
+  assert.equal($('results').lastElementChild.cells[1].colSpan, 3);
   assert.match($('results').textContent, /93,5/);
   assert.match($('results').textContent, /Minimalny rozmiar obrazu/);
   assert.match($('selection').textContent, /Zakończono: 2 \/ 2/);
@@ -88,6 +91,18 @@ function create(saved, blockedStorage = false, savedTheme) {
   $('theme-light').click();
   assert.equal(w.document.documentElement.dataset.theme, 'light');
   assert.equal($('results').innerHTML, rowsBefore);
+  vm.runInContext(`results[0].classification_diagnostics = {status: 'baseline', kernel_contribution_bound: 0};
+    results[0].confidence = 78.183882424; refreshLanguage();`, context);
+  assert.match($('results').textContent, /No model support/);
+  change('pl');
+  assert.match($('results').textContent, /Brak wsparcia modelu/);
+  vm.runInContext('download = (content) => { window.lastExport = content; }', context);
+  $('csv').click();
+  assert.match(w.lastExport, /"confidence_status"/);
+  assert.match(w.lastExport, /"baseline"/);
+  assert.match(w.lastExport, /78\.183882424/);
+  $('json').click();
+  assert.equal(JSON.parse(w.lastExport)[0].classification_diagnostics.status, 'baseline');
   const saved = create('pl', false, 'dark'); await tick();
   assert.equal(saved.w.document.documentElement.dataset.theme, 'dark');
   assert.equal(saved.$('theme-dark').getAttribute('aria-pressed'), 'true');

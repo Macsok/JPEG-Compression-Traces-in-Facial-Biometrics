@@ -35,6 +35,45 @@ on their computer. Docker must support Linux containers.
 
 ## Using the application
 
+The default **MEGA** design uses a large, detailed image-processing instrument
+built with [Anatomy](https://github.com/wheresryan22/anatomy). It remains fixed
+behind the page while you scroll; the camera moves between the sensor, processor
+and outputs. A scanning bridge and pulses on the circuit traces animate the
+instrument. Its 147 structural solids are generated locally. Eight sliding
+spectrum indicators and an inset signal scope follow the same sample column.
+Switch between smooth and detailed samples in the illustration controls.
+The indicators show log-scaled magnitudes of the column’s orthonormal 1D DCT;
+this is an illustrative signal, independent of the uploaded images.
+
+The illustration is independent of uploaded images and model results. Its
+slider selects one of eight columns in an illustrative 8 × 8 sample. Use the
+slider, keyboard, three camera presets, or pause all ambient motion. The pause
+preference is saved locally. Animation is capped at 30 updates per second,
+stops in hidden tabs and respects reduced motion. On a phone the controls
+collapse as you enter the upload workspace and can be expanded manually.
+
+The previous **Classic** design remains at **http://localhost:8000/?view=classic**;
+the header links between versions. The accepted original was saved in commit
+`8cae488` before MEGA work began. Both designs support English/Polish and
+light/dark themes, with no external fonts, scripts or runtime services.
+
+To change the geometry, edit `tools/build-engine.mjs` (MEGA) or
+`tools/build-inspector.mjs` (Classic), then run the corresponding file with Node.
+Generated SVGs in `app/templates/` are checked in; building and running the
+Docker application does not need Node. The vendored geometry kit's MIT license
+is in `tools/anatomy/LICENSE`.
+
+For a local preview when the model files are available only in the packaged
+image, run from this directory:
+
+```bash
+docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+```
+
+This uses the 1.0.0 image's model weights and mounts the current UI and inference
+code read-only. Restart the service after Python or template edits. The regular
+source build still requires the model files in `app/models/` as described below.
+
 The default interface language is English. Buttons showing the UK and Polish
 flags in the upper right corner let you select the language. Your choice is
 saved locally in the browser. Changing the language updates messages, errors,
@@ -102,9 +141,30 @@ no model mounts or model downloads are required at startup.
 
 Classification describes similarity to the training classes rather than the
 actual file format. JPEG quality is an estimate; for PPM it is indicative only.
-`confidence` is the maximum SVC probability, as in the notebook. SVC can sometimes
-return a label different from the class with the highest probability; both
-values are preserved without correction. Uniform images may produce infinite
+The API's `confidence` remains the maximum raw SVC probability (0–100), as in
+the notebook. SVC can sometimes return a label different from the class with
+the highest probability; both values are preserved without correction.
+The results table contains Image, Prediction, JPEG quality and Details.
+There is no probability column; exact class probabilities remain in Details
+and the exports.
+
+Some inputs produce almost the same 78.1839% because their RBF similarities to
+all support vectors are negligible. The SVM decision then tends to its fixed
+intercept: this is a model limitation, not reuse of a previous image's result.
+Details displays **No model support** for these cases, alongside an explanation
+that the prediction is a baseline. Raw classification and quality outputs are
+retained for notebook compatibility; this change does not retrain either model.
+
+`classification_diagnostics` includes `status`, `kernel_contribution_bound`,
+`max_kernel_similarity`, `decision` and `intercept`. Status `baseline` means
+`sum(abs(dual_coef) * RBF_similarity) <= 1e-6` in decision units. This absolute
+bound avoids mistaking cancellation of strong contributions for lack of support.
+Status `responsive` only means that this specific collapse was not detected;
+it is not a general out-of-distribution test or a guarantee of accuracy.
+CSV exports include `confidence_status` and `kernel_contribution_bound`; JSON
+includes all diagnostics. See [VALIDATION.md](VALIDATION.md) for measured examples.
+
+Uniform images may produce infinite
 PSNR. The application reports a missing feature instead of supplying an
 artificial value to the model.
 
@@ -145,7 +205,7 @@ curl -F 'file=@/path/to/image.jpg' http://localhost:8000/api/predict
 
 The API accepts one file per request and returns JSON containing `success`,
 `filename`, `format`, `prediction`, `confidence` (0–100), `probabilities` (0–1),
-`predicted_quality`, `indicators`, `width`, `height`, `elapsed_seconds`, and
+`classification_diagnostics`, `predicted_quality`, `indicators`, `width`, `height`, `elapsed_seconds`, and
 `thumbnail`.
 Error responses: 400 for a missing file, 413 for the upload limit, 415 for an
 unsupported extension, 422 for an invalid image or features, and 429 for a busy
@@ -190,4 +250,5 @@ Test a running container over HTTP, optionally using your own image directory:
 python3 tests/smoke_http.py ../contest-images
 ```
 
+Run the illustrative signal checks with `node --test tests/engine_signal.mjs`.
 Recorded verification results: [VALIDATION.md](VALIDATION.md).

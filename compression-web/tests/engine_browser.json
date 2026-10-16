@@ -1,0 +1,136 @@
+[
+  [
+    "until",
+    "document.getElementById('start') && document.getElementById('server-status').textContent.includes('ready')"
+  ],
+  [
+    "eval",
+    "(async()=>{const response=await fetch('/?view=classic');const html=await response.text();if(!response.ok||!html.includes('class=\"inspection-figure iso\"')||html.includes('id=\"engine-scene\"'))throw Error('Classic version unavailable');return 'Classic version preserved';})()"
+  ],
+  [
+    "eval",
+    "(async()=>{let frames=0;const bridge=document.getElementById('engine-bridge');const observer=new MutationObserver(m=>frames+=m.filter(x=>x.attributeName==='transform').length);observer.observe(bridge,{attributes:true});await new Promise(r=>setTimeout(r,1100));observer.disconnect();if(frames<1||frames>38)throw Error('Animation frequency outside expected cap: '+frames);return 'Animation updates in 1.1 s: '+frames;})()"
+  ],
+  [
+    "click",
+    "#engine-pause"
+  ],
+  [
+    "wait",
+    2200
+  ],
+  [
+    "eval",
+    "(async()=>{const scene=document.getElementById('engine-svg');const before=scene.innerHTML;await new Promise(r=>setTimeout(r,500));if(before!==scene.innerHTML)throw Error('Paused scene changed');if(localStorage.getItem('compression-engine-paused')!=='true')throw Error('Pause not saved');return 'Pause freezes and persists';})()"
+  ],
+  [
+    "key",
+    "End",
+    "#engine-column"
+  ],
+  [
+    "until",
+    "document.getElementById('engine-readout').value==='08 / 08'"
+  ],
+  [
+    "eval",
+    "for(const selector of ['[data-engine-column]','[data-engine-die]','[data-engine-output]']){const all=[...document.querySelectorAll(selector)];if(all.filter(x=>x.classList.contains('active')).length!==1||!all[7].classList.contains('active'))throw Error('Scan outputs disagree: '+selector)} 'Keyboard selection, sample, die and output agree'"
+  ],
+  [
+    "eval",
+    "window.beforeSpectrum=document.querySelector('[data-spectrum-cursor=\"5\"]').getAttribute('transform');window.beforeSignal=document.getElementById('engine-scope-trace').getAttribute('d');'Signal snapshot'"
+  ],
+  [
+    "click",
+    "#engine-pattern"
+  ],
+  [
+    "wait",
+    2200
+  ],
+  [
+    "eval",
+    "if(document.getElementById('engine-pattern').getAttribute('aria-pressed')!=='true'||document.getElementById('engine-scope-trace').getAttribute('d')===window.beforeSignal||document.querySelector('[data-spectrum-cursor=\"5\"]').getAttribute('transform')===window.beforeSpectrum)throw Error('Signal and spectrum did not respond');'Sample, scope and spectrum respond while paused'"
+  ],
+  [
+    "eval",
+    "(async()=>{const svg=document.getElementById('engine-svg');const before=svg.innerHTML;await new Promise(r=>setTimeout(r,500));if(svg.innerHTML!==before)throw Error('Signal did not settle while paused');return 'New mechanisms respect pause';})()"
+  ],
+  [
+    "click",
+    "[data-engine-view='2']"
+  ],
+  [
+    "wait",
+    1500
+  ],
+  [
+    "eval",
+    "if(document.querySelector('[data-engine-view=\"2\"]').getAttribute('aria-pressed')!=='true')throw Error('View control failed'); 'Camera preset selected'"
+  ],
+  [
+    "click",
+    "#theme-dark"
+  ],
+  [
+    "click",
+    "#language-pl"
+  ],
+  [
+    "wait",
+    300
+  ],
+  [
+    "eval",
+    "if(document.getElementById('engine-scene').dataset.theme!=='dark'||document.documentElement.lang!=='pl'||document.getElementById('engine-pause').textContent!=='Wznów ruch')throw Error('Theme or language desynchronised'); 'Theme and Polish controls synchronized'"
+  ],
+  [
+    "click",
+    "#engine-pause"
+  ],
+  [
+    "scroll",
+    "#workspace"
+  ],
+  [
+    "wait",
+    1400
+  ],
+  [
+    "eval",
+    "const scene=document.getElementById('engine-scene');if(getComputedStyle(scene).position!=='fixed'||scene.getBoundingClientRect().top!==0)throw Error('Background is not fixed');if(document.documentElement.scrollWidth>innerWidth)throw Error('Horizontal page overflow'); 'Fixed scene survives scrolling'"
+  ],
+  [
+    "eval",
+    "(async()=>{const canvas=document.createElement('canvas');canvas.width=canvas.height=96;const ctx=canvas.getContext('2d');for(let x=0;x<96;x++)for(let y=0;y<96;y++){ctx.fillStyle=`rgb(${(x*17+y*3)%256},${(x*3+y*11)%256},${(x*7+y*5)%256})`;ctx.fillRect(x,y,1,1)}const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',.8));const transfer=new DataTransfer();transfer.items.add(new File([blob],'mega-browser-check.jpg',{type:'image/jpeg'}));const input=document.getElementById('files');input.files=transfer.files;input.dispatchEvent(new Event('change'));document.getElementById('start').click();return 'Test JPEG submitted';})()"
+  ],
+  [
+    "until",
+    "document.getElementById('results').children.length===1&&!document.getElementById('files').disabled",
+    30000
+  ],
+  [
+    "eval",
+    "if(!exportResults()[0]?.success||document.getElementById('results-section').hidden)throw Error('Analysis failed: '+JSON.stringify(exportResults())); 'Real image analysis and report passed'"
+  ],
+  [
+    "scroll",
+    "#language-en"
+  ],
+  [
+    "wait",
+    500
+  ],
+  [
+    "click",
+    "#language-en"
+  ],
+  [
+    "eval",
+    "if(document.getElementById('results').children.length!==1||!document.getElementById('engine-pause').textContent.includes('motion'))throw Error('Language change lost state');'Results preserved across language switch'"
+  ],
+  [
+    "eval",
+    "if(document.querySelectorAll('thead th').length!==4||document.querySelector('#results tr').cells.length!==4||document.querySelector('th[data-i18n=\"confidence\"]'))throw Error('Probability column remains');'Four-column report verified'"
+  ]
+]
