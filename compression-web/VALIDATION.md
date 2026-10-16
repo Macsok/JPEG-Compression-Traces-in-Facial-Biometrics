@@ -127,3 +127,26 @@ Anatomy `drive.mjs` tool. Preview uses `compose.preview.yaml` and the packaged
   inset scope's trace/grid. Mobile 390 × 844 stays within the viewport; dock
   collapses in the workspace. Reduced motion stays still and supports immediate
   manual sample changes and keyboard selection.
+
+# Standalone GHCR release 1.1.0 — 2026-10-16
+
+- Built the final Linux/amd64 image from the current application source.
+  Model artifacts are copied during the build from the original 1.0.0 image
+  pinned to digest `sha256:0c378dc5bc38c7f388cc570c2f0546ce2adeedc8cb836dc789c906d7b413aaad`;
+  SHA-256 validation and feature-order checks passed. No local model files needed.
+- The Docker test stage passed all 11 backend tests. The separate UI image passed
+  the jsdom suite. The final runtime image excludes the test-stage files.
+- Started the final image with Compose in an isolated project on port 18080:
+  healthy, read-only filesystem, non-root user, no source/model bind mounts.
+  All five local sample images passed the HTTP smoke test.
+- The browser interaction suite passed against this standalone container:
+  MEGA/Classic, sample and spectrum controls, pause, keyboard, themes, languages,
+  scrolling, real JPEG analysis and four-column report. Browser console clean.
+- `compose.yaml` now selects 1.1.0 from GHCR. Normal startup uses
+  `docker compose pull` then `docker compose up -d --no-build`.
+  `compose.preview.yaml` remains an optional overlay for local source edits.
+- Published `ghcr.io/macsok/compression-inspector:1.1.0` with digest
+  `sha256:959b6998034176bef2dfb0c2a57358ec304acc47cf35757d445f697c555ee109`.
+  Anonymous registry inspection confirmed the Linux/amd64 manifest matches the
+  tested image. The previous 1.0.0 tag was not changed. The isolated test project
+  was removed after verification.

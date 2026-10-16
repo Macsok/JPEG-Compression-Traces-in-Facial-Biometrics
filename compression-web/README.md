@@ -9,64 +9,77 @@ and analysis work without an internet connection.
 ## Getting started with Docker Compose
 
 Install Docker with the Compose plugin (included in Docker Desktop). From the
-repository root, enter `compression-web/` and start the current application:
+repository root, enter `compression-web/` and start the published application:
 
 ```bash
 cd compression-web
-docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+docker compose pull
+docker compose up -d --no-build
 ```
 
 If your terminal is already in `compression-web/`, omit the `cd` command.
 Open **http://localhost:8000** for MEGA, or
 **http://localhost:8000/?view=classic** for the previous layout.
 
-Use both Compose files for every command in this setup. `compose.yaml` provides
-the service configuration; `compose.preview.yaml` selects the packaged 1.0.0
-image for its runtime and pretrained weights and mounts the current UI,
-`server.py` and `inference.py` from this checkout read-only. Keep these files
-in place. The image alone contains an older interface; this overlay runs the
-current repository version without requiring model files in Git.
+`compose.yaml` uses **`ghcr.io/macsok/compression-inspector:1.1.0`**. This standalone
+Linux/amd64 image contains the current interface, inference code, runtime and
+pretrained weights. Only the Compose file is needed to run it; there are no
+source or model mounts and no separate Python installation or training step.
 
-The first start downloads the image if needed and requires internet access.
-Later starts and analysis work offline with the cached image. No separate
-Python installation, model download, training or source build is required.
+The initial image download requires internet access. With the image cached,
+`docker compose up -d --no-build` and analysis work offline; omit `pull` offline.
 
 From `compression-web/`:
 
 ```bash
 # Check status and follow logs (Ctrl+C exits the log view).
-docker compose -f compose.yaml -f compose.preview.yaml ps
-docker compose -f compose.yaml -f compose.preview.yaml logs -f compression
+docker compose ps
+docker compose logs -f compression
 
-# Reload Python code or cached templates after editing or pulling updates.
-docker compose -f compose.yaml -f compose.preview.yaml restart compression
+# Restart the service.
+docker compose restart compression
 
-# Stop and remove the container; keep the downloaded image and source files.
-docker compose -f compose.yaml -f compose.preview.yaml down
+# Stop and remove the container; keep the downloaded image.
+docker compose down
 ```
 
-To start again, repeat `up -d --no-build` with both files. After pulling updates,
-run it again to apply any Compose changes, then restart the service to reload
-mounted Python code and cached templates.
+To start again, repeat `docker compose up -d --no-build`. To install a new release,
+update the image tag in `compose.yaml`, then run `docker compose pull` and
+`docker compose up -d --no-build`. Updating source files alone does not change
+the application inside a published image; use a source build or the overlay below.
 
 At least 2 GB of available RAM is recommended; larger images may require more.
 The application runs on the CPU. Users do not need a GPU or a notebook on their
 computer. Docker must support Linux containers.
 
-## Build a standalone image from source
+## Build from source or preview local edits
 
-This is an alternative to the setup above. Model weights are not committed to
-Git: first place all four model artifacts listed in `app/artifacts.json` in
-`app/models/`, with the expected checksums. Then run from `compression-web/`:
+To build a standalone image from this checkout, run from `compression-web/`:
 
 ```bash
 docker compose up --build -d
 ```
 
-This uses only `compose.yaml`, builds the current code and weights into the
-local `compression-inspector:1.0.0` image, and runs without source mounts.
-For this setup use `docker compose logs -f compression`, `docker compose restart
-compression` and `docker compose down`. Rebuild after source changes.
+The Dockerfile copies the original model weights from the 1.0.0 image pinned by
+SHA-256 digest, then validates all artifacts against `app/artifacts.json`.
+No model files need to be added to the checkout. The first source build requires
+internet access for the base images and Python dependencies. The resulting image
+contains both code and weights and runs without source mounts. Rebuild after
+source changes. A source build targets the architecture of the build machine.
+
+For UI and inference edits without rebuilding, use the optional overlay:
+
+```bash
+docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+```
+
+This mounts `app/static`, `app/templates`, `server.py` and `inference.py` read-only
+from the checkout, using the 1.1.0 runtime and models. Keep these source files in
+place and use both `-f` options for subsequent Compose commands. Restart with
+`docker compose -f compose.yaml -f compose.preview.yaml restart compression`
+after Python or template edits. Changes to dependencies or other Python modules
+require a new image build. To return to the published image, run
+`docker compose pull` and `docker compose up -d --no-build` without the overlay.
 
 ## Using the application
 
@@ -143,7 +156,8 @@ settings. Increasing the pixel limit increases memory usage and analysis time.
 ## Models and notebook compatibility
 
 The packaged image contains these four original model artifacts, approximately
-448 MiB in total. A source build expects them in `app/models/`:
+448 MiB in total. The Dockerfile copies them from the pinned model-artifact
+image into `/opt/compression/models/`:
 
 - `best_model_svm_(rbf).pkl`: SVC, with labels 0 = JFIF and 1 = PPM.
 - `scaler.pkl`: scaling for the classifier's 15 features.
@@ -193,41 +207,38 @@ Uniform images may produce infinite
 PSNR. The application reports a missing feature instead of supplying an
 artificial value to the model.
 
-## Distribution through a registry
+## Publishing a release to GHCR
 
-First build the standalone image as described above. Replace
-`REGISTRY/NAMESPACE` with your registry and namespace:
-
-```bash
-docker tag compression-inspector:1.0.0 REGISTRY/NAMESPACE/compression-inspector:1.0.0
-docker login REGISTRY
-docker push REGISTRY/NAMESPACE/compression-inspector:1.0.0
-```
-
-Recipients need only a copy of `compose.yaml`: remove its `build: .` line and
-set `image:` to `REGISTRY/NAMESPACE/compression-inspector:1.0.0`. From the folder
-containing that file, run:
+Build and verify the image from this directory before publishing. For a new
+release, update the version in `Dockerfile` and both Compose files, and use the
+same version in these commands. For 1.1.0:
 
 ```bash
-docker compose pull
-docker compose up -d --no-build
+docker build --target test -t compression-inspector:test-1.1.0 .
+docker build -t ghcr.io/macsok/compression-inspector:1.1.0 .
+docker login ghcr.io -u macsok
+docker push ghcr.io/macsok/compression-inspector:1.1.0
 ```
 
-This standalone image contains the code and models from your build, so neither
-`compose.preview.yaml` nor a source checkout is needed. Open
-**http://localhost:8000**; stop with `docker compose down`.
+For the login password use a GitHub personal access token (classic) with
+`write:packages`, as described in the
+[GHCR authentication documentation](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry).
+The SSH key used for Git does not authenticate Docker. Keep versioned release
+tags unchanged; publish a new version for subsequent changes.
+
+Recipients can use a copy of `compose.yaml` and run `docker compose pull` followed
+by `docker compose up -d --no-build`. The image includes all application code
+and model weights, so `compose.preview.yaml` is not needed.
 
 You can also distribute the image as a file:
 
 ```bash
-docker save -o compression-inspector.tar compression-inspector:1.0.0
+docker save -o compression-inspector.tar ghcr.io/macsok/compression-inspector:1.1.0
 docker load -i compression-inspector.tar
+docker compose up -d --no-build
 ```
 
-Copy the entire `compression-web` directory to build the application on another
-computer. A parent `.gitignore` may exclude `.pkl` files, so include the actual
-`app/models/` files when distributing the source. The built image already
-contains them. A standard build targets the architecture of the build machine.
+After loading the image, Compose runs it without contacting the registry.
 
 ## API and deployment
 

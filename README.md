@@ -71,38 +71,35 @@ repository and enter the application directory:
 ```bash
 git clone https://github.com/Macsok/JPEG-Compression-Traces-in-Facial-Biometrics.git
 cd JPEG-Compression-Traces-in-Facial-Biometrics/compression-web
-docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+docker compose pull
+docker compose up -d --no-build
 ```
 
-If you already have the repository, run the last command from `compression-web/`.
-Open [http://localhost:8000](http://localhost:8000) in your browser.
+If you already have the repository, run the last two commands from
+`compression-web/`. Open [http://localhost:8000](http://localhost:8000).
 The previous Classic layout is available at
 [http://localhost:8000/?view=classic](http://localhost:8000/?view=classic).
 
-Use **both Compose files** to run the current repository version. The base file
-configures the service, port and resource settings; `compose.preview.yaml` uses
-`ghcr.io/macsok/compression-inspector:1.0.0` for the runtime and pretrained weights,
-then mounts the current interface and inference code read-only from this checkout.
-Running the 1.0.0 image alone shows the older application bundled in that image.
-Keep the checkout in place while using this configuration.
+Compose uses **`ghcr.io/macsok/compression-inspector:1.1.0`**, which contains the
+current application, its runtime dependencies and pretrained model weights.
+No source mounts, separate Python installation, model download or training step
+are needed. Only `compose.yaml` is required to run the published image.
+The published release targets Linux/amd64.
 
-The first start downloads the image if it is not already available. No separate
-Python installation, model download or training step is required. Subsequent
-starts and analysis can run offline. A source build with `--build` is a separate
-option that requires local model files; see the application README below.
-
+The initial download requires internet access. Once the image is cached,
+`docker compose up -d --no-build` and image analysis work offline.
 Run these commands from `compression-web/` to view logs, restart, or stop and
 remove the application container:
 
 ```bash
-docker compose -f compose.yaml -f compose.preview.yaml logs -f compression
-docker compose -f compose.yaml -f compose.preview.yaml restart compression
-docker compose -f compose.yaml -f compose.preview.yaml down
+docker compose logs -f compression
+docker compose restart compression
+docker compose down
 ```
 
-To start it again, repeat the `up -d --no-build` command. After pulling source
-updates, repeat that command and then `restart compression` with both Compose
-files to reload Python code and cached templates.
+After updating the release tag in `compose.yaml`, run `docker compose pull` and
+`docker compose up -d --no-build` to install the new release. For local source
+edits, use the optional development overlay described in the application README.
 
 ### Source code and model weights
 
@@ -112,9 +109,9 @@ See the [application README](compression-web/README.md) for implementation
 details and local build instructions.
 
 Pretrained weights are included in the distributed container image but are
-not committed to this Git repository. Building the application from source
-requires separately supplying the model artifacts expected by
-`compression-web/app/artifacts.json` in `compression-web/app/models/`.
+not committed to this Git repository. The Dockerfile copies the original weights
+from a digest-pinned 1.0.0 image during the build and validates them against
+`compression-web/app/artifacts.json`. No manual model-file setup is required.
 
 The application provides an inference interface for the trained models.
 Its predictions are subject to the interpretation boundary and scientific
