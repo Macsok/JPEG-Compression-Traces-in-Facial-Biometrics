@@ -1,4 +1,5 @@
 'use strict';
+import { samplePixel, columnSignal, spectrum } from './engine-signal.mjs';
 
 // A decorative instrument with one shared scan model, independent of inference.
 (() => {
@@ -12,6 +13,14 @@
   const toggle = document.getElementById('engine-toggle');
   const settings = document.getElementById('engine-settings');
   const dock = document.querySelector('.engine-dock');
+  const reticle = document.getElementById('engine-reticle');
+  const pattern = document.getElementById('engine-pattern');
+  const cursors = [...scene.querySelectorAll('[data-spectrum-cursor]')];
+  const fills = [...scene.querySelectorAll('[data-spectrum-fill]')];
+  const pixels = [...scene.querySelectorAll('[data-pixel]')].map(el => ({el, at:el.dataset.pixel.split(',').map(Number)}));
+  const scope = document.getElementById('engine-scope-trace');
+  const scopePoints = [...scene.querySelectorAll('[data-scope-point]')];
+  const [zx,zy] = document.getElementById('engine-svg').dataset.liftVector.split(',').map(Number);
   const presets = [...document.querySelectorAll('[data-engine-view]')];
   const columns = [...scene.querySelectorAll('[data-engine-column]')];
   const die = [...scene.querySelectorAll('[data-engine-die]')];
@@ -29,6 +38,7 @@
   let focus=0, focusTarget=0, pointerX=0, pointerY=0, x=0, y=0;
   let manual=false, sliderFocused=false, forceDraw=true;
   let compactZone=false;
+  let detailed=false, signalBlend=0, lastPixelBlend=-1, signalKey='';
   const views=[{x:0,y:0,s:1},{x:-100,y:30,s:1.12},{x:-65,y:-75,s:1.08}];
   let pose={...views[0]};
   let cameraTransform='';
@@ -71,6 +81,30 @@
     }
     position=reduced.matches ? target : follow(position,target,dt,.18);
     bridge.setAttribute('transform',`translate(${position*14.6*vx} ${position*14.6*vy})`);
+    reticle.setAttribute('transform',`translate(${position*14.6*vx} ${position*14.6*vy})`);
+    signalBlend=reduced.matches ? Number(detailed) : follow(signalBlend,Number(detailed),dt,.22);
+    const key=`${position.toFixed(4)},${signalBlend.toFixed(4)}`;
+    if (key!==signalKey) {
+      signalKey=key;
+      const smooth=columnSignal(position), texture=columnSignal(position,true);
+      const samples=smooth.map((value,i)=>value+(texture[i]-value)*signalBlend);
+      spectrum(samples).forEach((level,i)=>{
+        const lift=level*28;
+        cursors[i].setAttribute('transform',`translate(${(zx*lift).toFixed(3)} ${(zy*lift).toFixed(3)})`);
+        fills[i].setAttribute('y',(-24-lift).toFixed(3));
+        fills[i].setAttribute('height',(1+lift).toFixed(3));
+      });
+      const points=samples.map((value,i)=>[2+i*114/7,9-value/255*8]);
+      scope.setAttribute('d',points.map(([x,y],i)=>`${i?'L':'M'}${x.toFixed(3)} ${y.toFixed(3)}`).join(''));
+      points.forEach(([x,y],i)=>{scopePoints[i].setAttribute('cx',x);scopePoints[i].setAttribute('cy',y);});
+      if (signalBlend!==lastPixelBlend) {
+        lastPixelBlend=signalBlend;
+        pixels.forEach(({el,at:[col,row]})=>{
+          const value=Math.round(samplePixel(col,row)*(1-signalBlend)+samplePixel(col,row,true)*signalBlend);
+          el.setAttribute('fill',`rgb(${value},${value},${value})`);
+        });
+      }
+    }
     const current=Math.max(0,Math.min(7,Math.round(position)));
     if (current!==activeColumn || forceDraw) {
       activeColumn=current;
@@ -102,7 +136,7 @@
       packets.forEach(({dot})=>dot.setAttribute('opacity','0'));
     }
     forceDraw=false;
-    return animate || Math.abs(position-target)>.001 || (!reduced.matches && Math.abs(focus-focusTarget)>.001) || Math.abs(x)>.01 || Math.abs(y)>.01;
+    return animate || Math.abs(signalBlend-Number(detailed))>.001 || Math.abs(position-target)>.001 || (!reduced.matches && Math.abs(focus-focusTarget)>.001) || Math.abs(x)>.01 || Math.abs(y)>.01;
   }
   function tick(now) {
     frame=0;
@@ -127,6 +161,13 @@
     forceDraw=true; controls(); run();
   });
   toggle.addEventListener('click',()=>collapse(!settings.hidden));
+  pattern.addEventListener('click',()=>{
+    detailed=!detailed;
+    pattern.setAttribute('aria-pressed',String(detailed));
+    pattern.dataset.i18n=detailed ? 'enginePatternDetailed' : 'enginePatternSmooth';
+    pattern.textContent=t(pattern.dataset.i18n);
+    forceDraw=true; run();
+  });
   presets.forEach(button=>button.addEventListener('click',()=>{
     focusTarget=Number(button.dataset.engineView);
     // In reduced motion, an explicit camera choice changes immediately.

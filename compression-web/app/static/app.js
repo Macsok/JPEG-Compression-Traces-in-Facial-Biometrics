@@ -49,34 +49,28 @@ function cell(row, text, className) {
   row.append(td); return td;
 }
 function errorText(result) { return t('error.' + (result.error_code || 'server'), result.error_params || {}); }
-function confidenceText(result) {
-  if (result.classification_diagnostics?.status === 'baseline') return t('confidenceUnsupported');
-  // Avoid turning a near-one probability into a claim of absolute certainty.
-  return result.confidence > 99.9 ? '>' + number(99.9, 1) + '%' : number(result.confidence, 3) + '%';
-}
 function addResult(result) {
   const row = document.createElement('tr');
   const name = cell(row, result.filename);
   if (result.thumbnail) {
     const img = document.createElement('img'); img.src = result.thumbnail; img.alt = ''; img.loading = 'lazy'; name.prepend(img);
   }
-  if (!result.success) { const td = cell(row, errorText(result)); td.colSpan = 4; }
+  if (!result.success) { const td = cell(row, errorText(result)); td.colSpan = 3; }
   else {
     const label = cell(row, ''); const badge = document.createElement('span');
     badge.className = 'badge ' + result.format.toLowerCase(); badge.textContent = result.format; label.append(badge);
-    const confidence = cell(row, confidenceText(result));
-    confidence.title = t('confidenceExplanation');
-    if (result.classification_diagnostics?.status === 'baseline') {
-      confidence.className = 'confidence-unsupported';
-      const note = document.createElement('small'); note.textContent = t('confidenceBaseline'); confidence.append(note);
-    }
     const quality = cell(row, number(result.predicted_quality, 1), 'quality');
     if (result.format === 'PPM') { const note = document.createElement('small'); note.textContent = t('ppmNote'); quality.append(note); }
     const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = t('featureDetails');
     const pre = document.createElement('pre');
     pre.textContent = `${t('probabilities')}:\n${JSON.stringify(result.probabilities, null, 2)}\n\n${t('indicators')}:\n${JSON.stringify(result.indicators, null, 2)}\n\n${t('width')}: ${result.width}\n${t('height')}: ${result.height}\n${t('duration')}: ${number(result.elapsed_seconds, 3)}`;
     if (result.classification_diagnostics) pre.textContent += `\n\n${t('confidenceDiagnostics')}:\n${JSON.stringify(result.classification_diagnostics, null, 2)}`;
-    details.append(summary, pre); cell(row, '').append(details);
+    details.append(summary);
+    if (result.classification_diagnostics?.status === 'baseline') {
+      const note = document.createElement('p'); note.className = 'confidence-unsupported';
+      note.textContent = t('confidenceUnsupported') + '. ' + t('confidenceBaseline'); details.append(note);
+    }
+    details.append(pre); cell(row, '').append(details);
   }
   $('results').append(row);
 }

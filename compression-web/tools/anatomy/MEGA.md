@@ -37,3 +37,20 @@ with its complete travel kept clear of the neighboring processor and memory.
 
 Build with `node tools/build-engine.mjs`. The generated SVG is checked in.
 No build kit, third-party JS, font or image is downloaded by the page.
+
+## Refinement: signal analyser
+
+Extend the existing Hero with a physical eight-channel spectrum instrument.
+Each vertical indicator moves along a guide in its own housing; its position
+represents the log-scaled magnitude of one orthonormal 1D DCT coefficient of
+the currently scanned sample column. A small inset scope shows those same eight
+pixel values. All readings use the illustrative sample, never uploaded images.
+
+Planned additions: eight meter housings, eight inset tracks, eight sliding
+cursors with engraved index marks, eight illuminated scales, eight front status
+windows, sixteen housing screws; scope pedestal, bezel, glass inset, eight
+sample points and trace, four case screws; a planar scan reticle on the sample.
+The housing and cursor are shaded prisms; guides and scale marks meet their
+frames. Cursors travel vertically on their front guides, staying within each
+housing. No pipes or turned bodies are introduced. Both signal patterns are
+computed by one small shared module; pause and reduced motion govern all motion.

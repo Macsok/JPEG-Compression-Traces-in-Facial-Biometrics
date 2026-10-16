@@ -34,13 +34,13 @@ body.mega { background: var(--paper); }
 .engine-scene.iso[data-theme="light"] {
   --anatomy-paper: #dee4d8; --anatomy-top: #f0f3e9; --anatomy-face: #e9eee1;
   --anatomy-shade-0: #a9b4a3; --anatomy-shade-1: #bec8b6; --anatomy-shade-2: #ced6c6; --anatomy-shade-3: #dce3d3;
-  --anatomy-hi: #34422d; --anatomy-mid: #67775a; --anatomy-lo: #88977c; --anatomy-faint: #a3af98;
+  --anatomy-hi: #34422d; --anatomy-mid: #596f4e; --anatomy-lo: #88977c; --anatomy-faint: #a3af98;
   --anatomy-lit: #304624; --anatomy-lit-top: #c3d2ae; --anatomy-lit-shade: #a5b593;
   --anatomy-halo: #61714e; --anatomy-halo-opacity: .24;
 }
 .engine-scene.iso[data-theme="dark"] {
-  --anatomy-paper: #20271e; --anatomy-top: #343e2d; --anatomy-face: #3d4933;
-  --anatomy-shade-0: #11170e; --anatomy-shade-1: #1c2317; --anatomy-shade-2: #252e1f; --anatomy-shade-3: #2c3625;
+  --anatomy-paper: #20271e; --anatomy-top: #3b4832; --anatomy-face: #445338;
+  --anatomy-shade-0: #11170e; --anatomy-shade-1: #1c2317; --anatomy-shade-2: #252e1f; --anatomy-shade-3: #303d29;
   --anatomy-hi: #b5c49b; --anatomy-mid: #81916b; --anatomy-lo: #586548; --anatomy-faint: #414d35;
   --anatomy-lit: #e1edcb; --anatomy-lit-top: #8eaa68; --anatomy-lit-shade: #657d4b;
   --anatomy-halo: #030602; --anatomy-halo-opacity: .6;
@@ -169,7 +169,7 @@ body.mega { background: var(--paper); }
   .mega .hero-copy::before { inset: -55px -20px -75px -35px; background: linear-gradient(180deg,var(--paper) 65%,transparent); opacity: .97; }
   .mega .hero-facts { gap: 12px; }
   .hero-notation { display: none; }
-  .hero-bottom { bottom: 25px; align-items: flex-start; }
+  .hero-bottom { bottom: 25px; align-items: flex-start; background: var(--panel); padding: 12px; border: 1px solid var(--line); border-radius: 4px; }
   .hero-bottom p { position: static; margin: 0; max-width: 220px; font-size: 9px; }
   .mega .workspace,.mega .explanation { width: 100%; backdrop-filter: blur(10px); }
   .mega .explanation { grid-template-columns: 1fr 1fr; }
@@ -220,3 +220,15 @@ body.mega { background: var(--paper); }
 @media (prefers-reduced-motion: reduce) {
   .mega html { scroll-behavior: auto; }
 }
+
+/* Inset signal scope and a bank of physical spectrum indicators. */
+.engine-scope-glass,.engine-meter-track { fill: var(--anatomy-shade-0); stroke: var(--anatomy-lo); stroke-width: .55; }
+.engine-scope-grid { fill: none; stroke: var(--anatomy-lo); stroke-width: .25; opacity: .6; }
+.engine-scope-trace { fill: none; stroke: var(--anatomy-lit); stroke-width: .7; stroke-linejoin: round; }
+.engine-scope-point,.engine-meter-fill { fill: var(--anatomy-lit); }
+.engine-meter-tick { fill: var(--anatomy-mid); }
+.engine-meter-screw { fill: none; stroke: var(--anatomy-lo); stroke-width: .5; }
+#engine-reticle .iso-line { stroke: var(--anatomy-lit); stroke-width: 1.1; }
+.engine-signal-control { display: flex; justify-content: space-between; gap: 12px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; font: 8px/1.5 var(--mono); color: var(--muted); }
+.engine-signal-control button { padding: 4px 7px; background: var(--soft); color: var(--ink); font: 9px/1.4 var(--mono); border: 1px solid var(--line); }
+.engine-signal-control button[aria-pressed="true"] { border-color: var(--green); }

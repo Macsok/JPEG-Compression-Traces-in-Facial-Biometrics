@@ -35,9 +35,6 @@ function create(saved, blockedStorage = false, savedTheme) {
   assert.equal($('language-en').getAttribute('aria-pressed'), 'true');
   assert.equal($('start').textContent, 'Start analysis');
   assert.equal($('server-status').textContent, '● Models ready');
-  assert.equal(vm.runInContext('confidenceText({confidence: 99.9999})', context), '>99.9%');
-  assert.equal(vm.runInContext('confidenceText({confidence: 78.1838824})', context), '78.184%');
-  assert.equal(vm.runInContext("confidenceText({confidence: 78.1838824, classification_diagnostics: {status: 'baseline'}})", context), 'No model support');
   assert.equal($('progress').getAttribute('aria-label'), 'Analysis progress');
   assert.match(w.document.querySelector('footer').textContent, /generated using AI/);
   const dictionaries = JSON.parse(vm.runInContext('JSON.stringify(messages)', context));
@@ -57,7 +54,6 @@ function create(saved, blockedStorage = false, savedTheme) {
   assert.equal(w.document.documentElement.dataset.theme, 'dark');
   assert.equal(w.localStorage.getItem('compression-theme'), 'dark');
   change('pl');
-  assert.equal(vm.runInContext("confidenceText({confidence: 78.1838824, classification_diagnostics: {status: 'baseline'}})", context), 'Brak wsparcia modelu');
   assert.equal($('theme-dark').getAttribute('aria-pressed'), 'true');
   assert.equal($('theme-light').getAttribute('aria-pressed'), 'false');
   assert.equal($('language-pl').getAttribute('aria-pressed'), 'true');
@@ -69,6 +65,9 @@ function create(saved, blockedStorage = false, savedTheme) {
   ui.finish();
   for (let i = 0; i < 20 && $('files').disabled; i++) await tick();
   assert.equal($('results').children.length, 2);
+  assert.equal(w.document.querySelectorAll('thead th').length, 4);
+  assert.equal($('results').firstElementChild.cells.length, 4);
+  assert.equal($('results').lastElementChild.cells[1].colSpan, 3);
   assert.match($('results').textContent, /93,5/);
   assert.match($('results').textContent, /Minimalny rozmiar obrazu/);
   assert.match($('selection').textContent, /Zakończono: 2 \/ 2/);

@@ -37,6 +37,26 @@
     "for(const selector of ['[data-engine-column]','[data-engine-die]','[data-engine-output]']){const all=[...document.querySelectorAll(selector)];if(all.filter(x=>x.classList.contains('active')).length!==1||!all[7].classList.contains('active'))throw Error('Scan outputs disagree: '+selector)} 'Keyboard selection, sample, die and output agree'"
   ],
   [
+    "eval",
+    "window.beforeSpectrum=document.querySelector('[data-spectrum-cursor=\"5\"]').getAttribute('transform');window.beforeSignal=document.getElementById('engine-scope-trace').getAttribute('d');'Signal snapshot'"
+  ],
+  [
+    "click",
+    "#engine-pattern"
+  ],
+  [
+    "wait",
+    2200
+  ],
+  [
+    "eval",
+    "if(document.getElementById('engine-pattern').getAttribute('aria-pressed')!=='true'||document.getElementById('engine-scope-trace').getAttribute('d')===window.beforeSignal||document.querySelector('[data-spectrum-cursor=\"5\"]').getAttribute('transform')===window.beforeSpectrum)throw Error('Signal and spectrum did not respond');'Sample, scope and spectrum respond while paused'"
+  ],
+  [
+    "eval",
+    "(async()=>{const svg=document.getElementById('engine-svg');const before=svg.innerHTML;await new Promise(r=>setTimeout(r,500));if(svg.innerHTML!==before)throw Error('Signal did not settle while paused');return 'New mechanisms respect pause';})()"
+  ],
+  [
     "click",
     "[data-engine-view='2']"
   ],
@@ -62,7 +82,7 @@
   ],
   [
     "eval",
-    "if(document.getElementById('engine-scene').dataset.theme!=='dark'||document.documentElement.lang!=='pl'||document.getElementById('engine-pause').textContent!=='Wzn\u00f3w ruch')throw Error('Theme or language desynchronised'); 'Theme and Polish controls synchronized'"
+    "if(document.getElementById('engine-scene').dataset.theme!=='dark'||document.documentElement.lang!=='pl'||document.getElementById('engine-pause').textContent!=='Wznów ruch')throw Error('Theme or language desynchronised'); 'Theme and Polish controls synchronized'"
   ],
   [
     "click",
@@ -108,5 +128,9 @@
   [
     "eval",
     "if(document.getElementById('results').children.length!==1||!document.getElementById('engine-pause').textContent.includes('motion'))throw Error('Language change lost state');'Results preserved across language switch'"
+  ],
+  [
+    "eval",
+    "if(document.querySelectorAll('thead th').length!==4||document.querySelector('#results tr').cells.length!==4||document.querySelector('th[data-i18n=\"confidence\"]'))throw Error('Probability column remains');'Four-column report verified'"
   ]
 ]

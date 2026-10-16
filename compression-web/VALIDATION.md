@@ -104,3 +104,26 @@ Reproduce API checks with `python3 tests/smoke_http.py /path/to/images`.
 `tests/engine_browser.json` contains the browser interaction sequence for the
 Anatomy `drive.mjs` tool. Preview uses `compose.preview.yaml` and the packaged
 1.0.0 image's weights, with local code mounted read-only. No image was published.
+
+# Signal instrument refinement — 2026-10-16
+
+- Removed the Model probability column from both MEGA and Classic. The report
+  now has four columns; error rows span the remaining three. Probabilities and
+  the baseline diagnostic remain in expandable Details and exports.
+- Extended the instrument to 147 solids: eight physical spectrum indicators
+  with sliding cursors, inset signal scope, moving sample reticle, detailed
+  scales and fasteners. Improved contrast in both themes and corrected a
+  cooling-assembly fastener's drawing order so the fins occlude it correctly.
+- One shared sample module drives the illustrated pixels, scope and orthonormal
+  1D DCT magnitudes. The smooth/detail switch changes all three together. The
+  displayed spectrum uses logarithmic magnitude; it is not inference telemetry.
+- `node --test tests/engine_signal.mjs`: constant/zero/DC and cosine-basis checks
+  passed. UI suite passed with four-column success/error rows and intact exports.
+- Extended real-browser suite passed: sample switch updates scope and spectrum
+  while paused, motion settles, all original controls and real JPEG analysis
+  work, and the resulting table has four columns. Console clean.
+- Reviewed the entire instrument at 4× in light/dark and at scan endpoints.
+  Line checks: **0 floating ends among 134 ends on 260 lines**, including the
+  inset scope's trace/grid. Mobile 390 × 844 stays within the viewport; dock
+  collapses in the workspace. Reduced motion stays still and supports immediate
+  manual sample changes and keyboard selection.

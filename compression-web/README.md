@@ -39,7 +39,11 @@ The default **MEGA** design uses a large, detailed image-processing instrument
 built with [Anatomy](https://github.com/wheresryan22/anatomy). It remains fixed
 behind the page while you scroll; the camera moves between the sensor, processor
 and outputs. A scanning bridge and pulses on the circuit traces animate the
-instrument. Its 128 structural solids and 1,471 SVG paths are generated locally.
+instrument. Its 147 structural solids are generated locally. Eight sliding
+spectrum indicators and an inset signal scope follow the same sample column.
+Switch between smooth and detailed samples in the illustration controls.
+The indicators show log-scaled magnitudes of the column’s orthonormal 1D DCT;
+this is an illustrative signal, independent of the uploaded images.
 
 The illustration is independent of uploaded images and model results. Its
 slider selects one of eight columns in an illustrative 8 × 8 sample. Use the
@@ -140,13 +144,14 @@ actual file format. JPEG quality is an estimate; for PPM it is indicative only.
 The API's `confidence` remains the maximum raw SVC probability (0–100), as in
 the notebook. SVC can sometimes return a label different from the class with
 the highest probability; both values are preserved without correction.
-The interface calls this **Model probability**, displays values above 99.9%
-as **>99.9%**, and exposes exact class probabilities in Details and JSON.
+The results table contains Image, Prediction, JPEG quality and Details.
+There is no probability column; exact class probabilities remain in Details
+and the exports.
 
 Some inputs produce almost the same 78.1839% because their RBF similarities to
 all support vectors are negligible. The SVM decision then tends to its fixed
 intercept: this is a model limitation, not reuse of a previous image's result.
-The UI displays **No model support** for these cases, alongside an explanation
+Details displays **No model support** for these cases, alongside an explanation
 that the prediction is a baseline. Raw classification and quality outputs are
 retained for notebook compatibility; this change does not retrain either model.
 
@@ -245,4 +250,5 @@ Test a running container over HTTP, optionally using your own image directory:
 python3 tests/smoke_http.py ../contest-images
 ```
 
+Run the illustrative signal checks with `node --test tests/engine_signal.mjs`.
 Recorded verification results: [VALIDATION.md](VALIDATION.md).
