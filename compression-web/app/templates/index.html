@@ -9,15 +9,22 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='anatomy/iso.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='workbench.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mega.css') }}">
   <script defer src="{{ url_for('static', filename='i18n.js') }}"></script>
   <script defer src="{{ url_for('static', filename='histogram.js') }}"></script>
   <script defer src="{{ url_for('static', filename='app.js') }}"></script>
-  <script defer src="{{ url_for('static', filename='inspector.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='engine.js') }}"></script>
 </head>
-<body>
+<body class="mega">
+  <div class="ambient-grid" aria-hidden="true"></div>
+  <div class="engine-scene iso" id="engine-scene" data-theme="light" aria-hidden="true">
+    <div class="engine-world">{% include 'engine.svg' %}</div>
+  </div>
+  <div class="viewport-frame" aria-hidden="true"><span>CI—02 / SIGNAL OBSERVATORY</span><span>08 × 08 / 64</span><i></i><i></i><i></i><i></i></div>
   <header>
     <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Compression <strong>Inspector</strong></span></a>
     <div class="header-controls">
+      <a class="version-link" href="/?view=classic" data-i18n="classicVersion">Classic version ↗</a>
       <span class="status" id="server-status">Connecting to the models…</span>
       <div class="icon-switch" role="group" data-i18n-aria="language" aria-label="Language">
         <button type="button" id="language-en" class="icon-button" data-language="en" data-i18n-aria="languageEnglish" data-i18n-title="languageEnglish" aria-label="English" title="English" aria-pressed="true">
@@ -40,21 +47,15 @@
   <main>
     <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
-    <p class="eyebrow" data-i18n="eyebrow">IMAGE COMPRESSION ANALYSIS</p>
-    <h1 id="hero-title" data-i18n="headline">What lies within the pixels?</h1>
+    <p class="eyebrow"><span class="edition-label">MEGA / 02</span><span data-i18n="megaEyebrow">THE ANATOMY OF AN IMAGE</span></p>
+    <h1 id="hero-title" data-i18n="megaHeadline">Every pixel
+leaves a trace.</h1>
     <p class="intro" data-i18n="intro">Look for traces of JPEG compression. Select images or a whole folder to predict PPM / JFIF and JPEG quality.</p>
     <a class="hero-link" href="#workspace"><span data-i18n="heroAction">Inspect your images</span><span aria-hidden="true">↗</span></a>
     <div class="hero-facts"><span><i aria-hidden="true"></i><span data-i18n="originalResolution">Original resolution</span></span><span data-i18n="batchAnalysis">Batch analysis</span><span>CSV / JSON</span></div>
+    <div class="hero-notation" aria-hidden="true"><span>f(x, y)</span><b>→</b><span>F(u, v)</span><span class="notation-grid">▦</span><small>SPATIAL → FREQUENCY</small></div>
     </div>
-    <figure class="inspection-figure iso" data-theme="light">
-      <div class="iso-plate">
-        <div class="figure-top"><span data-i18n="figureNumber">FIG. 01</span><span data-i18n="figureTitle">The pixel inspection bench</span></div>
-        <div class="inspection-stage">{% include 'inspector.svg' %}</div>
-        <div class="figure-bottom"><label for="inspection-column" data-i18n="figureHint">Explore a column</label><span class="figure-readout"><span data-i18n="column">Column</span> <output id="inspection-readout" for="inspection-column" data-readout>01 / 08</output></span></div>
-        <div class="figure-controls"><input id="inspection-column" type="range" min="1" max="8" step="1" value="1" data-i18n-aria="figureHint" aria-label="Explore a column"><button type="button" id="inspection-play" class="tour-button" aria-pressed="false" data-i18n="figurePause">Pause</button></div>
-      </div>
-      <figcaption><span class="caption-key" aria-hidden="true"></span><span data-i18n="figureCaption">An illustrative 8 × 8 pixel block. JPEG works with blocks of this size; your analysis uses the full image.</span></figcaption>
-    </figure>
+    <div class="hero-bottom"><a href="#workspace" class="scroll-cue"><span aria-hidden="true">↓</span><span data-i18n="scrollExplore">Scroll into the instrument</span></a><p><span class="eyebrow" data-i18n="engineFigure">FIG. 02 / COMPRESSION ENGINE</span><span data-i18n="engineCaption">An interactive illustration. Your results come from the analysis below.</span></p></div>
     </section>
     <section class="workspace" id="workspace" aria-labelledby="workspace-title">
     <div class="section-heading"><div><p class="eyebrow" data-i18n="workspaceLabel">YOUR WORKSPACE</p><h2 id="workspace-title" data-i18n="workspaceTitle">From image to evidence.</h2></div><span class="section-index">01 — 03</span></div>
@@ -86,10 +87,17 @@
         <div id="histogram"></div>
         <p id="histogram-note" class="hint"></p>
       </section>
-      <div class="table-wrap"><table><thead><tr><th data-i18n="image">Image</th><th data-i18n="prediction">Prediction</th><th data-i18n="confidence">Model confidence</th><th data-i18n="quality">JPEG quality</th><th data-i18n="details">Details</th></tr></thead><tbody id="results"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th data-i18n="image">Image</th><th data-i18n="prediction">Prediction</th><th data-i18n="confidence">Model probability</th><th data-i18n="quality">JPEG quality</th><th data-i18n="details">Details</th></tr></thead><tbody id="results"></tbody></table></div>
     </section>
     <aside class="explanation"><div><p class="eyebrow" data-i18n="fieldNotes">FIELD NOTES</p><h2 data-i18n="interpreting">How to read the results</h2></div><div><h3 data-i18n="formatNote">A signature in the pixels</h3><p data-i18n="explanationFormat">JFIF indicates features typical of JPEG compression, while PPM indicates features typical of uncompressed images in the training set. This is a prediction from pixels, not a reading of the file format.</p></div><div><h3 data-i18n="qualityNote">An estimate, with context</h3><p data-i18n="explanationQuality">JPEG quality is a model estimate, not a camera setting or a visual rating. For PPM predictions, quality is indicative only. Confidence applies to the PPM / JFIF classification and does not guarantee accuracy.</p></div></aside>
     <footer data-i18n="footer">All images are processed locally. This application was generated using AI.</footer>
   </main>
+  <aside class="engine-dock" aria-label="Illustration controls" data-i18n-aria="engineControls">
+    <div class="engine-dock-heading"><span class="engine-live-dot" aria-hidden="true"></span><span data-i18n="engineControls">Illustration controls</span><button id="engine-pause" type="button" aria-pressed="false" data-i18n="enginePause">Pause motion</button><button type="button" id="engine-toggle" aria-expanded="true" aria-controls="engine-settings" aria-label="Hide illustration controls" data-i18n-aria="engineHideControls" title="Hide illustration controls" data-i18n-title="engineHideControls">−</button></div>
+    <div id="engine-settings">
+    <div class="engine-presets" role="group" data-i18n-aria="engineView" aria-label="Instrument view"><button type="button" data-engine-view="0" aria-pressed="true"><span>01</span> <span data-i18n="engineSensor">Sensor</span></button><button type="button" data-engine-view="1" aria-pressed="false"><span>02</span> <span data-i18n="engineCore">Processor</span></button><button type="button" data-engine-view="2" aria-pressed="false"><span>03</span> <span data-i18n="engineOutput">Output</span></button></div>
+    <div class="engine-range"><label for="engine-column" data-i18n="column">Column</label><input id="engine-column" type="range" min="1" max="8" value="1" step="1"><output for="engine-column" id="engine-readout" aria-live="off" data-readout>01 / 08</output></div>
+    </div>
+  </aside>
 </body>
 </html>

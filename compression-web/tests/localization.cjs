@@ -35,6 +35,9 @@ function create(saved, blockedStorage = false, savedTheme) {
   assert.equal($('language-en').getAttribute('aria-pressed'), 'true');
   assert.equal($('start').textContent, 'Start analysis');
   assert.equal($('server-status').textContent, '● Models ready');
+  assert.equal(vm.runInContext('confidenceText({confidence: 99.9999})', context), '>99.9%');
+  assert.equal(vm.runInContext('confidenceText({confidence: 78.1838824})', context), '78.184%');
+  assert.equal(vm.runInContext("confidenceText({confidence: 78.1838824, classification_diagnostics: {status: 'baseline'}})", context), 'No model support');
   assert.equal($('progress').getAttribute('aria-label'), 'Analysis progress');
   assert.match(w.document.querySelector('footer').textContent, /generated using AI/);
   const dictionaries = JSON.parse(vm.runInContext('JSON.stringify(messages)', context));
@@ -54,6 +57,7 @@ function create(saved, blockedStorage = false, savedTheme) {
   assert.equal(w.document.documentElement.dataset.theme, 'dark');
   assert.equal(w.localStorage.getItem('compression-theme'), 'dark');
   change('pl');
+  assert.equal(vm.runInContext("confidenceText({confidence: 78.1838824, classification_diagnostics: {status: 'baseline'}})", context), 'Brak wsparcia modelu');
   assert.equal($('theme-dark').getAttribute('aria-pressed'), 'true');
   assert.equal($('theme-light').getAttribute('aria-pressed'), 'false');
   assert.equal($('language-pl').getAttribute('aria-pressed'), 'true');
@@ -88,6 +92,18 @@ function create(saved, blockedStorage = false, savedTheme) {
   $('theme-light').click();
   assert.equal(w.document.documentElement.dataset.theme, 'light');
   assert.equal($('results').innerHTML, rowsBefore);
+  vm.runInContext(`results[0].classification_diagnostics = {status: 'baseline', kernel_contribution_bound: 0};
+    results[0].confidence = 78.183882424; refreshLanguage();`, context);
+  assert.match($('results').textContent, /No model support/);
+  change('pl');
+  assert.match($('results').textContent, /Brak wsparcia modelu/);
+  vm.runInContext('download = (content) => { window.lastExport = content; }', context);
+  $('csv').click();
+  assert.match(w.lastExport, /"confidence_status"/);
+  assert.match(w.lastExport, /"baseline"/);
+  assert.match(w.lastExport, /78\.183882424/);
+  $('json').click();
+  assert.equal(JSON.parse(w.lastExport)[0].classification_diagnostics.status, 'baseline');
   const saved = create('pl', false, 'dark'); await tick();
   assert.equal(saved.w.document.documentElement.dataset.theme, 'dark');
   assert.equal(saved.$('theme-dark').getAttribute('aria-pressed'), 'true');

@@ -1,0 +1,10 @@
+# Preview local UI/inference edits using the already packaged model weights.
+# docker compose -f compose.yaml -f compose.preview.yaml up -d --no-build
+services:
+  compression:
+    image: ghcr.io/macsok/compression-inspector:1.0.0
+    volumes:
+      - ./app/static:/opt/compression/static:ro
+      - ./app/templates:/opt/compression/templates:ro
+      - ./app/server.py:/opt/compression/server.py:ro
+      - ./app/inference.py:/opt/compression/inference.py:ro

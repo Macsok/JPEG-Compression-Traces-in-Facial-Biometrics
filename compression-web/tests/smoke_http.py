@@ -31,7 +31,7 @@ def main():
         assert result['success'], result
         count += 1
         print(json.dumps({'filename': path.name, **{key: result[key] for key in (
-            'format', 'confidence', 'predicted_quality', 'elapsed_seconds')}}, ensure_ascii=False))
+            'format', 'confidence', 'classification_diagnostics', 'predicted_quality', 'elapsed_seconds')}}, ensure_ascii=False))
     assert count, 'No images found'
     print(f'HTTP smoke test passed: {count} images.')
 

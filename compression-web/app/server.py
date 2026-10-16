@@ -31,7 +31,8 @@ inference_lock = Lock()
 
 @app.get('/')
 def index():
-    return render_template('index.html')
+    template = 'index-classic.html' if request.args.get('view') == 'classic' else 'index.html'
+    return render_template(template)
 
 
 @app.get('/health')

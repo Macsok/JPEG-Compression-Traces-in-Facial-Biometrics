@@ -49,6 +49,11 @@ function cell(row, text, className) {
   row.append(td); return td;
 }
 function errorText(result) { return t('error.' + (result.error_code || 'server'), result.error_params || {}); }
+function confidenceText(result) {
+  if (result.classification_diagnostics?.status === 'baseline') return t('confidenceUnsupported');
+  // Avoid turning a near-one probability into a claim of absolute certainty.
+  return result.confidence > 99.9 ? '>' + number(99.9, 1) + '%' : number(result.confidence, 3) + '%';
+}
 function addResult(result) {
   const row = document.createElement('tr');
   const name = cell(row, result.filename);
@@ -59,12 +64,18 @@ function addResult(result) {
   else {
     const label = cell(row, ''); const badge = document.createElement('span');
     badge.className = 'badge ' + result.format.toLowerCase(); badge.textContent = result.format; label.append(badge);
-    cell(row, number(result.confidence, 1) + '%');
+    const confidence = cell(row, confidenceText(result));
+    confidence.title = t('confidenceExplanation');
+    if (result.classification_diagnostics?.status === 'baseline') {
+      confidence.className = 'confidence-unsupported';
+      const note = document.createElement('small'); note.textContent = t('confidenceBaseline'); confidence.append(note);
+    }
     const quality = cell(row, number(result.predicted_quality, 1), 'quality');
     if (result.format === 'PPM') { const note = document.createElement('small'); note.textContent = t('ppmNote'); quality.append(note); }
     const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = t('featureDetails');
     const pre = document.createElement('pre');
     pre.textContent = `${t('probabilities')}:\n${JSON.stringify(result.probabilities, null, 2)}\n\n${t('indicators')}:\n${JSON.stringify(result.indicators, null, 2)}\n\n${t('width')}: ${result.width}\n${t('height')}: ${result.height}\n${t('duration')}: ${number(result.elapsed_seconds, 3)}`;
+    if (result.classification_diagnostics) pre.textContent += `\n\n${t('confidenceDiagnostics')}:\n${JSON.stringify(result.classification_diagnostics, null, 2)}`;
     details.append(summary, pre); cell(row, '').append(details);
   }
   $('results').append(row);
@@ -116,9 +127,9 @@ function exportResults() { return results.map(({thumbnail, error, ...r}) => r.su
 $('json').addEventListener('click', () => download(JSON.stringify(exportResults(), null, 2), 'application/json', 'json'));
 $('csv').addEventListener('click', () => {
   const features = [...new Set(results.flatMap(r => Object.keys(r.indicators || {})))];
-  const columns = ['filename', 'success', 'format', 'confidence', 'predicted_quality', 'probability_JFIF', 'probability_PPM', 'width', 'height', 'elapsed_seconds', 'error', ...features];
+  const columns = ['filename', 'success', 'format', 'confidence', 'confidence_status', 'kernel_contribution_bound', 'predicted_quality', 'probability_JFIF', 'probability_PPM', 'width', 'height', 'elapsed_seconds', 'error', ...features];
   const quote = value => { let s = String(value ?? ''); if (/^[\s]*[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replaceAll('"', '""') + '"'; };
-  const rows = exportResults().map(r => ({...r, ...r.indicators, probability_JFIF: r.probabilities?.JFIF, probability_PPM: r.probabilities?.PPM}));
+  const rows = exportResults().map(r => ({...r, ...r.indicators, confidence_status: r.classification_diagnostics?.status, kernel_contribution_bound: r.classification_diagnostics?.kernel_contribution_bound, probability_JFIF: r.probabilities?.JFIF, probability_PPM: r.probabilities?.PPM}));
   download('\uFEFF' + [columns.map(quote).join(','), ...rows.map(r => columns.map(c => quote(r[c])).join(','))].join('\r\n'), 'text/csv;charset=utf-8', 'csv');
 });
 function refreshLanguage() {

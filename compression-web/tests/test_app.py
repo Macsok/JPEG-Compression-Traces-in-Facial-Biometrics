@@ -38,7 +38,14 @@ class ApplicationTests(unittest.TestCase):
         page = self.client.get('/')
         self.assertEqual(page.status_code, 200)
         self.assertIn(b'<html lang="en">', page.data)
-        for path in ('/static/app.js', '/static/i18n.js', '/static/histogram.js', '/static/style.css', '/health'):
+        self.assertIn(b'id="engine-scene"', page.data)
+        classic = self.client.get('/?view=classic')
+        self.assertEqual(classic.status_code, 200)
+        self.assertIn(b'class="inspection-figure iso"', classic.data)
+        self.assertNotIn(b'id="engine-scene"', classic.data)
+        self.assertIn(b'id="engine-scene"', self.client.get('/?view=unknown').data)
+        for path in ('/static/app.js', '/static/i18n.js', '/static/histogram.js', '/static/style.css',
+                     '/static/mega.css', '/static/engine.js', '/health'):
             with self.client.get(path) as response:
                 self.assertEqual(response.status_code, 200)
         self.assertTrue(self.client.get('/health').json['models_loaded'])
@@ -71,6 +78,25 @@ class ApplicationTests(unittest.TestCase):
         second = self.upload(data, 'input.png').json
         self.assertEqual(first['indicators'], second['indicators'])
         self.assertEqual(first['format'], second['format'])
+
+    def test_rbf_baseline_diagnostic(self):
+        predictor = server.predictor
+        model = predictor.classifier
+        supported = model.support_vectors_[:1]
+        far = model.support_vectors_.max(axis=0, keepdims=True) + 1000
+        self.assertEqual(predictor.classification_diagnostics(supported)['status'], 'responsive')
+        diagnostic = predictor.classification_diagnostics(far)
+        self.assertEqual(diagnostic['status'], 'baseline')
+        self.assertEqual(diagnostic['kernel_contribution_bound'], 0)
+        self.assertEqual(diagnostic['decision'], diagnostic['intercept'])
+        for point in (supported, far):
+            diagnostic = predictor.classification_diagnostics(point)
+            self.assertLessEqual(abs(diagnostic['decision'] - diagnostic['intercept']),
+                                 diagnostic['kernel_contribution_bound'] + 1e-12)
+        # API must expose diagnostics without changing notebook probabilities.
+        result = self.upload(sample()).json
+        self.assertIn(result['classification_diagnostics']['status'], ('baseline', 'responsive'))
+        self.assertAlmostEqual(result['confidence'], max(result['probabilities'].values()) * 100)
 
     def test_bad_file_does_not_break_next_prediction(self):
         self.assertEqual(self.upload(b'not an image').status_code, 422)
